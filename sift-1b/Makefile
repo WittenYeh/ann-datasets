@@ -92,17 +92,17 @@ fetch: $(DOWNLOAD_FILES)
 info:
 	@echo "=== SIFT-1B Dataset Information ==="
 	@if [ -f "$(BASE_FILE)" ]; then \
-		python3 ../inspect_vectors.py $(BASE_FILE); \
+		python3 ../preview_dataset.py $(BASE_FILE); \
 	else \
 		echo "Base file not found. Run 'make setup' first."; \
 	fi
 	@if [ -f "$(QUERY_FILE)" ]; then \
-		python3 ../inspect_vectors.py $(QUERY_FILE); \
+		python3 ../preview_dataset.py $(QUERY_FILE); \
 	else \
 		echo "Query file not found. Run 'make setup' first."; \
 	fi
 	@if [ -f "$(TRUTH_FILE)" ]; then \
-		python3 ../inspect_vectors.py $(TRUTH_FILE); \
+		python3 ../preview_dataset.py $(TRUTH_FILE); \
 	else \
 		echo "Ground truth file not found. Run 'make setup' first."; \
 	fi

@@ -1,6 +1,40 @@
 # ANNDatasets
 
-Easy-to-use datasets for ANN benchmark. A MAKE command is all you need.
+```
+    _    _   _ _   _   ____        _                  _
+   / \  | \ | | \ | | |  _ \  __ _| |_ __ _ ___  ___| |_ ___
+  / _ \ |  \| |  \| | | | | |/ _` | __/ _` / __|/ _ \ __/ __|
+ / ___ \| |\  | |\  | | |_| | (_| | || (_| \__ \  __/ |_\__ \
+/_/   \_\_| \_|_| \_| |____/ \__,_|\__\__,_|___/\___|\__|___/
+```
+
+**Easy-to-use ANN benchmark datasets with a single MAKE command.**
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Python 3.6+](https://img.shields.io/badge/python-3.6+-blue.svg)](https://www.python.org/downloads/)
+
+## Quick Start
+
+```bash
+# Download and setup a dataset
+cd sift-1m
+make all
+
+# Inspect dataset information
+make info
+
+# Clean up
+make clean      # Remove extracted files
+make clean-all  # Remove everything including archives
+```
+
+## Features
+
+- **One-Command Setup**: Download and extract with `make all`
+- **Auto-Skip Existing**: Smart checks prevent redundant downloads/extractions
+- **Dataset Preview**: Built-in tool to inspect vector files
+- **Multiple Formats**: Support for fvecs, bvecs, ivecs formats
+- **Large Dataset Support**: Optimized for datasets up to 1B+ vectors
 
 ## Download and Decompress Target Dataset
 
@@ -38,11 +72,11 @@ This will display:
 - Vector dimension
 - File size
 
-You can also use the `inspect_vectors.py` tool directly:
+You can also use the `preview_dataset.py` tool directly:
 
 ```bash
-python3 ../inspect_vectors.py sift_base.fvecs
-python3 ../inspect_vectors.py sift_base.fvecs --preview 5  # Preview first 5 vectors
+python3 ../preview_dataset.py sift_base.fvecs
+python3 ../preview_dataset.py sift_base.fvecs --preview 5  # Preview first 5 vectors
 ```
 
 ## Clean Target Dataset

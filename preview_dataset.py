@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Vector dataset inspection tool for fvecs, bvecs, and ivecs formats.
+Vector dataset preview tool for fvecs, bvecs, and ivecs formats.
 
 Supports:
 - fvecs: float32 vectors (4 bytes per element)
@@ -8,8 +8,8 @@ Supports:
 - ivecs: int32 vectors (4 bytes per element)
 
 Usage:
-  python inspect_vectors.py <filename>
-  python inspect_vectors.py <filename> --preview 5
+  python preview_dataset.py <filename>
+  python preview_dataset.py <filename> --preview 5
 """
 
 import argparse
@@ -126,8 +126,8 @@ def format_size(size_bytes):
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Inspect vector dataset files (fvecs, bvecs, ivecs)",
-        epilog="Example: python inspect_vectors.py sift_base.fvecs --preview 5"
+        description="Preview vector dataset files (fvecs, bvecs, ivecs)",
+        epilog="Example: python preview_dataset.py sift_base.fvecs --preview 5"
     )
 
     parser.add_argument("filename", help="Path to vector file")

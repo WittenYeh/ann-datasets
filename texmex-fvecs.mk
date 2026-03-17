@@ -50,7 +50,7 @@ info:
 	@echo "=== $(DATASET_NAME) Dataset Information ==="
 	@for file in $(FINAL_FILES); do \
 		if [ -f "$$file" ]; then \
-			python3 ../inspect_vectors.py $$file; \
+			python3 ../preview_dataset.py $$file; \
 		fi; \
 	done
 
