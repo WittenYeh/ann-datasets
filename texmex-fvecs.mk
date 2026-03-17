@@ -23,8 +23,9 @@ FINAL_FILES    := $(BASE_FILE) $(QUERY_FILE) $(LEARN_FILE) $(TRUTH_FILE)
 # --- 2. Generic Rules ---
 # The main 'setup' target depends on all final files.
 setup: $(FINAL_FILES)
+	@echo "-> Dataset setup complete!"
 
-# Generic rule to create final files from the archive.
+# Generic rule to create final files from the archive with auto-extraction.
 $(FINAL_FILES): $(ARCHIVE_FILE)
 	@# This 'if' block ensures the extraction command runs only once.
 	@if [ ! -f "$(firstword $(FINAL_FILES))" ]; then \
@@ -32,11 +33,26 @@ $(FINAL_FILES): $(ARCHIVE_FILE)
 		tar -xzf $(ARCHIVE_FILE); \
 		echo "-> Moving required files from $(EXTRACT_DIR)/ subdirectory..."; \
 		for file in $(FINAL_FILES); do \
-			mv $(EXTRACT_DIR)/$$file .; \
+			if [ -f "$(EXTRACT_DIR)/$$file" ]; then \
+				mv $(EXTRACT_DIR)/$$file .; \
+			else \
+				echo "Warning: $$file not found in archive."; \
+			fi; \
 		done; \
 		echo "-> Cleaning up temporary directory '$(EXTRACT_DIR)'..."; \
 		rm -rf $(EXTRACT_DIR); \
+	else \
+		echo "-> Files already extracted, skipping extraction."; \
 	fi
+
+# Inspect dataset information
+info:
+	@echo "=== $(DATASET_NAME) Dataset Information ==="
+	@for file in $(FINAL_FILES); do \
+		if [ -f "$$file" ]; then \
+			python3 ../inspect_vectors.py $$file; \
+		fi; \
+	done
 
 # Rule to clean up the extracted files.
 clean:
@@ -49,4 +65,4 @@ clean-all: clean
 # --- End of Generic Rules ---
 
 # --- 3. Phony Targets ---
-.PHONY: setup clean
+.PHONY: setup clean info

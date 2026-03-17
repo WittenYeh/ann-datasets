@@ -11,7 +11,7 @@ URL            := ftp://ftp.irisa.fr/local/texmex/corpus/siftsmall.tar.gz
 # --- 2. Include Generic Recipes ---
 # Provides the download rule.
 include ../common.mk
-# Derives all filenames and provides extraction, clean, and preview rules.
+# Derives all filenames and provides extraction, clean, info, and preview rules.
 include ../texmex-fvecs.mk
 # --- End of Recipes ---
 
