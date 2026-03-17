@@ -89,6 +89,12 @@ python3 ../preview_dataset.py sift_base.fvecs --preview 5  # Preview first 5 vec
 ### SIFT Datasets
 - **sift-10k**: Small SIFT dataset (10K vectors, 128 dimensions)
 - **sift-1m**: SIFT 1 Million dataset (1M base vectors, 128 dimensions)
+- **sift-10m**: SIFT 10 Million dataset (10M base vectors, 128 dimensions)
+  - Extracted from SIFT1B dataset
+  - Requires SIFT1B to be downloaded first
+- **sift-100m**: SIFT 100 Million dataset (100M base vectors, 128 dimensions)
+  - Extracted from SIFT1B dataset (~13GB output)
+  - Requires SIFT1B to be downloaded first
 - **sift-1b**: SIFT 1 Billion dataset (1B base vectors, 128 dimensions)
   - **Warning**: Very large dataset (~120GB base file)
   - Downloads 4 separate files: base, learn, query, and ground truth
@@ -96,6 +102,42 @@ python3 ../preview_dataset.py sift_base.fvecs --preview 5  # Preview first 5 vec
 
 ### GIST Dataset
 - **gist-1m**: GIST 1 Million dataset (1M vectors, 960 dimensions)
+
+### Deep Learning Datasets
+- **deep-1m**: Deep1M dataset (1M vectors, 96 dimensions)
+  - Extracted from Deep1B dataset
+  - CNN features reduced by PCA and L2-normalized
+  - Source: Yandex Deep1B dataset
+
+## Working with Large Datasets
+
+### Extracting Subsets
+
+For large datasets like SIFT1B and Deep1B, you can extract smaller subsets:
+
+```bash
+# Extract SIFT10M from SIFT1B (auto-downloads SIFT1B if needed)
+cd sift-10m && make all
+
+# Extract SIFT100M from SIFT1B (auto-downloads SIFT1B if needed)
+cd sift-100m && make all
+
+# Extract Deep1M from Deep1B (downloads and extracts automatically)
+cd deep-1m && make setup
+```
+
+**Note**: SIFT10M and SIFT100M will automatically download and setup SIFT1B if it's not already present. The extraction process reuses the SIFT1B files without duplicating the large dataset.
+
+The `extract_subset.py` tool can also be used directly:
+
+```bash
+python3 extract_subset.py bigann_base.bvecs sift10m_base.bvecs 10000000
+```
+
+### Dataset Dependencies
+
+- **sift-10m** and **sift-100m** automatically initialize **sift-1b** if needed
+- **deep-1m** downloads Deep1B automatically and extracts the subset
 
 ## How to Add a New Dataset
 
