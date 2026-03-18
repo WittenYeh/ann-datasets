@@ -95,7 +95,7 @@ python3 ../preview_dataset.py sift_base.fvecs --preview 5  # Preview first 5 vec
 - **sift-100m**: SIFT 100 Million dataset (100M base vectors, 128 dimensions)
   - Extracted from SIFT1B dataset (~13GB output)
   - Requires SIFT1B to be downloaded first
-- **sift-1b**: SIFT 1 Billion dataset (1B base vectors, 128 dimensions)
+- **big-ann**: SIFT 1 Billion dataset (1B base vectors, 128 dimensions)
   - **Warning**: Very large dataset (~120GB base file)
   - Downloads 4 separate files: base, learn, query, and ground truth
   - Use `make fetch` to download without decompression
@@ -136,7 +136,7 @@ python3 extract_subset.py bigann_base.bvecs sift10m_base.bvecs 10000000
 
 ### Dataset Dependencies
 
-- **sift-10m** and **sift-100m** automatically initialize **sift-1b** if needed
+- **sift-10m** and **sift-100m** automatically initialize **big-ann** if needed
 - **deep-1m** downloads Deep1B automatically and extracts the subset
 
 ## How to Add a New Dataset

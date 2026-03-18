@@ -4,8 +4,8 @@
 DATASET_NAME := sift-10m
 NUM_VECTORS  := 10000000
 
-# Source files from SIFT1B
-SIFT1B_DIR   := ../sift-1b
+# Source files from big-ann
+SIFT1B_DIR   := ../big-ann
 SOURCE_BASE  := $(SIFT1B_DIR)/bigann_base.bvecs
 SOURCE_QUERY := $(SIFT1B_DIR)/bigann_query.bvecs
 SOURCE_LEARN := $(SIFT1B_DIR)/bigann_learn.bvecs
