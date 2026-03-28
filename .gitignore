@@ -5,3 +5,6 @@
 *.tar.gz
 *.gz
 *.zip
+*.hdf5
+*.h5
+*.vec

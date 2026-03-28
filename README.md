@@ -86,28 +86,27 @@ python3 ../preview_dataset.py sift_base.fvecs --preview 5  # Preview first 5 vec
 
 ## Supported Datasets
 
-### SIFT Datasets
-- **sift-10k**: Small SIFT dataset (10K vectors, 128 dimensions)
-- **sift-1m**: SIFT 1 Million dataset (1M base vectors, 128 dimensions)
-- **sift-10m**: SIFT 10 Million dataset (10M base vectors, 128 dimensions)
-  - Extracted from SIFT1B dataset
-  - Requires SIFT1B to be downloaded first
-- **sift-100m**: SIFT 100 Million dataset (100M base vectors, 128 dimensions)
-  - Extracted from SIFT1B dataset (~13GB output)
-  - Requires SIFT1B to be downloaded first
-- **big-ann**: SIFT 1 Billion dataset (1B base vectors, 128 dimensions)
-  - **Warning**: Very large dataset (~120GB base file)
-  - Downloads 4 separate files: base, learn, query, and ground truth
-  - Use `make fetch` to download without decompression
+| Directory | Dataset | Dim | # Base | # Query | Type | Homepage | Download URL |
+|-----------|---------|-----|--------|---------|------|----------|--------------|
+| `sift-10k` | SIFT-10K | 128 | 10K | 100 | Image | http://corpus-texmex.irisa.fr | `ftp://ftp.irisa.fr/local/texmex/corpus/siftsmall.tar.gz` |
+| `sift-1m` | SIFT-1M | 128 | 1M | 10K | Image | http://corpus-texmex.irisa.fr | `ftp://ftp.irisa.fr/local/texmex/corpus/sift.tar.gz` |
+| `sift-10m` | SIFT-10M | 128 | 10M | 10K | Image | http://corpus-texmex.irisa.fr | Subset of SIFT1B (see `big-ann`) |
+| `sift-100m` | SIFT-100M | 128 | 100M | 10K | Image | http://corpus-texmex.irisa.fr | Subset of SIFT1B (see `big-ann`) |
+| `big-ann` | SIFT-1B | 128 | 1B | 10K | Image | http://corpus-texmex.irisa.fr | `http://corpus-texmex.irisa.fr/` |
+| `gist-1m` | GIST-1M | 960 | 1M | 1K | Image | http://corpus-texmex.irisa.fr | `ftp://ftp.irisa.fr/local/texmex/corpus/gist.tar.gz` |
+| `deep-1m` | Deep-1M | 96 | 1M | 10K | Image | https://research.yandex.com/blog/benchmarks-for-billion-scale-similarity-search | `https://storage.yandexcloud.net/yandex-research/ann-datasets/deep1b/` |
+| `msong` | MSONG | 420 | ~992K | - | Audio | http://www.ifs.tuwien.ac.at/mir/msd/ | `https://www.cse.cuhk.edu.hk/systems/hash/gqr/dataset/msong.tar.gz` |
+| `audio` | Audio | 192 | ~54K | - | Audio | https://www.cs.princeton.edu/cass/demos.htm | `https://www.cse.cuhk.edu.hk/systems/hash/gqr/dataset/audio.tar.gz` |
+| `glove` | GloVe | 100 | ~1.2M | - | Text | http://nlp.stanford.edu/projects/glove/ | `https://www.cse.cuhk.edu.hk/systems/hash/gqr/dataset/glove1.2m.tar.gz` |
+| `crawl` | Crawl | 300 | ~2M | - | Text | http://commoncrawl.org/ | `https://dl.fbaipublicfiles.com/fasttext/vectors-english/crawl-300d-2M.vec.zip` |
 
-### GIST Dataset
-- **gist-1m**: GIST 1 Million dataset (1M vectors, 960 dimensions)
+### Notes
 
-### Deep Learning Datasets
-- **deep-1m**: Deep1M dataset (1M vectors, 96 dimensions)
-  - Extracted from Deep1B dataset
-  - CNN features reduced by PCA and L2-normalized
-  - Source: Yandex Deep1B dataset
+- **SIFT / GIST**: Classic Texmex corpus datasets. Ready-to-use fvecs format.
+- **Deep-1M**: CNN features from Yandex Deep1B, reduced by PCA and L2-normalized. Extracted as a 1M subset.
+- **MSONG / Audio / GloVe**: Ready-to-use fvecs from [CUHK GQR](https://www.cse.cuhk.edu.hk/systems/hash/gqr/datasets.html). No groundtruth included; must be computed separately.
+- **Crawl**: fastText Common Crawl 300d word vectors. Downloaded as text format (.vec) and auto-converted to fvecs. Query/groundtruth must be generated separately.
+- **SIFT-10M / SIFT-100M / SIFT-1B**: Large-scale SIFT variants. 10M and 100M are auto-extracted from SIFT1B.
 
 ## Working with Large Datasets
 
