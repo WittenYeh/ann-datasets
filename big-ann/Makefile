@@ -24,13 +24,12 @@ FINAL_FILES    := $(BASE_FILE) $(LEARN_FILE) $(QUERY_FILE) $(TRUTH_FILE)
 # --- End of Configuration ---
 
 
-# --- 2. Include Generic Recipes ---
-include ../common.mk
-# --- End of Recipes ---
-
-
-# --- 3. Define Targets ---
+# --- 2. Define Default Target (must be before includes) ---
 all: setup
+.PHONY: all
+
+# --- 3. Include Generic Recipes ---
+include ../common.mk
 
 setup: $(FINAL_FILES)
 	@echo "-> SIFT-1B dataset setup complete!"

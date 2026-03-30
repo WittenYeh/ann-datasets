@@ -9,14 +9,12 @@ URL            := ftp://ftp.irisa.fr/local/texmex/corpus/sift.tar.gz
 # --- End of Configuration ---
 
 
-# --- 2. Include Generic Recipes ---
+# --- 2. Define Default Target (must be before includes) ---
+all: setup
+.PHONY: all
+
+# --- 3. Include Generic Recipes ---
 # Provides the download rule.
 include ../common.mk
 # Derives all filenames and provides extraction, clean, info, and preview rules.
 include ../texmex-fvecs.mk
-# --- End of Recipes ---
-
-# --- 3. Define Final Targets ---
-all: setup
-
-.PHONY: all
