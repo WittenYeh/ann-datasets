@@ -17,7 +17,6 @@ Output files:
 """
 
 import argparse
-import struct
 import sys
 import os
 
@@ -28,30 +27,7 @@ except ImportError:
     sys.exit(1)
 
 import numpy as np
-
-
-def write_fvecs(filename, data):
-    """Write float32 vectors in fvecs format."""
-    data = np.asarray(data, dtype=np.float32)
-    n, d = data.shape
-    with open(filename, 'wb') as f:
-        for i in range(n):
-            f.write(struct.pack('i', d))
-            f.write(data[i].tobytes())
-            if (i + 1) % 100000 == 0:
-                print(f"  Written {i + 1:,} / {n:,} vectors")
-    print(f"  -> {filename}: {n:,} vectors, dim={d}")
-
-
-def write_ivecs(filename, data):
-    """Write int32 vectors in ivecs format."""
-    data = np.asarray(data, dtype=np.int32)
-    n, d = data.shape
-    with open(filename, 'wb') as f:
-        for i in range(n):
-            f.write(struct.pack('i', d))
-            f.write(data[i].tobytes())
-    print(f"  -> {filename}: {n:,} vectors, dim={d}")
+from vecs_io import fvecs_write, ivecs_write
 
 
 def convert_hdf5(input_file, output_prefix, num_gt_neighbors=100):
@@ -61,33 +37,38 @@ def convert_hdf5(input_file, output_prefix, num_gt_neighbors=100):
         return False
 
     print(f"Opening {input_file}...")
-    with h5py.File(input_file, 'r') as f:
+    with h5py.File(input_file, "r") as f:
         print(f"  Datasets: {list(f.keys())}")
 
         # Base vectors
-        if 'train' in f:
+        if "train" in f:
             print(f"\nConverting base vectors ('train')...")
-            base = np.array(f['train'], dtype=np.float32)
-            write_fvecs(f"{output_prefix}_base.fvecs", base)
+            base = np.array(f["train"], dtype=np.float32)
+            fname = f"{output_prefix}_base.fvecs"
+            fvecs_write(fname, base)
+            print(f"  -> {fname}: {base.shape[0]:,} vectors, dim={base.shape[1]}")
         else:
             print("Warning: 'train' dataset not found in HDF5 file.")
 
         # Query vectors
-        if 'test' in f:
+        if "test" in f:
             print(f"\nConverting query vectors ('test')...")
-            query = np.array(f['test'], dtype=np.float32)
-            write_fvecs(f"{output_prefix}_query.fvecs", query)
+            query = np.array(f["test"], dtype=np.float32)
+            fname = f"{output_prefix}_query.fvecs"
+            fvecs_write(fname, query)
+            print(f"  -> {fname}: {query.shape[0]:,} vectors, dim={query.shape[1]}")
         else:
             print("Warning: 'test' dataset not found in HDF5 file.")
 
         # Ground truth neighbors
-        if 'neighbors' in f:
+        if "neighbors" in f:
             print(f"\nConverting ground truth ('neighbors')...")
-            gt = np.array(f['neighbors'], dtype=np.int32)
-            # Truncate to num_gt_neighbors if needed
+            gt = np.array(f["neighbors"], dtype=np.int32)
             if gt.shape[1] > num_gt_neighbors:
                 gt = gt[:, :num_gt_neighbors]
-            write_ivecs(f"{output_prefix}_groundtruth.ivecs", gt)
+            fname = f"{output_prefix}_groundtruth.ivecs"
+            ivecs_write(fname, gt)
+            print(f"  -> {fname}: {gt.shape[0]:,} vectors, dim={gt.shape[1]}")
         else:
             print("Warning: 'neighbors' dataset not found in HDF5 file.")
 
@@ -98,12 +79,14 @@ def convert_hdf5(input_file, output_prefix, num_gt_neighbors=100):
 def main():
     parser = argparse.ArgumentParser(
         description="Convert HDF5 (ann-benchmarks format) to fvecs/ivecs",
-        epilog="Example: python hdf5_to_fvecs.py glove-100-angular.hdf5 glove100"
+        epilog="Example: python hdf5_to_fvecs.py glove-100-angular.hdf5 glove100",
     )
     parser.add_argument("input_file", help="Input HDF5 file")
     parser.add_argument("output_prefix", help="Output file prefix")
-    parser.add_argument("-k", "--num-neighbors", type=int, default=100,
-                        help="Number of ground truth neighbors to keep (default: 100)")
+    parser.add_argument(
+        "-k", "--num-neighbors", type=int, default=100,
+        help="Number of ground truth neighbors to keep (default: 100)",
+    )
 
     args = parser.parse_args()
     success = convert_hdf5(args.input_file, args.output_prefix, args.num_neighbors)

@@ -14,10 +14,10 @@ Example:
 """
 
 import argparse
-import struct
 import sys
 import os
 import numpy as np
+from vecs_io import fvecs_write
 
 
 def convert_vec_to_fvecs(input_file, output_file, max_vectors=None):
@@ -27,12 +27,8 @@ def convert_vec_to_fvecs(input_file, output_file, max_vectors=None):
         return False
 
     print(f"Reading {input_file}...")
-    vectors_written = 0
 
-    with open(input_file, 'r', encoding='utf-8', errors='replace') as fin, \
-         open(output_file, 'wb') as fout:
-
-        # Read header line
+    with open(input_file, "r", encoding="utf-8", errors="replace") as fin:
         header = fin.readline().strip().split()
         num_vectors = int(header[0])
         dim = int(header[1])
@@ -42,43 +38,41 @@ def convert_vec_to_fvecs(input_file, output_file, max_vectors=None):
             num_vectors = min(num_vectors, max_vectors)
             print(f"  Limiting to {num_vectors:,} vectors")
 
+        vecs = []
         for line in fin:
-            if vectors_written >= num_vectors:
+            if len(vecs) >= num_vectors:
                 break
-
             parts = line.strip().split()
             if len(parts) != dim + 1:
-                # Skip malformed lines (e.g., multi-word entries)
                 continue
-
             try:
-                vec = np.array([float(x) for x in parts[1:]], dtype=np.float32)
+                vec = [float(x) for x in parts[1:]]
             except ValueError:
                 continue
-
             if len(vec) != dim:
                 continue
+            vecs.append(vec)
+            if len(vecs) % 100000 == 0:
+                print(f"  Progress: {len(vecs):,} / {num_vectors:,}")
 
-            fout.write(struct.pack('i', dim))
-            fout.write(vec.tobytes())
-            vectors_written += 1
-
-            if vectors_written % 100000 == 0:
-                print(f"  Progress: {vectors_written:,} / {num_vectors:,}")
-
-    print(f"  -> {output_file}: {vectors_written:,} vectors, dim={dim}")
+    data = np.array(vecs, dtype=np.float32)
+    print(f"Writing {output_file}...")
+    fvecs_write(output_file, data)
+    print(f"  -> {output_file}: {data.shape[0]:,} vectors, dim={dim}")
     return True
 
 
 def main():
     parser = argparse.ArgumentParser(
         description="Convert fastText .vec text format to fvecs binary format",
-        epilog="Example: python vec_to_fvecs.py crawl-300d-2M.vec crawl_base.fvecs"
+        epilog="Example: python vec_to_fvecs.py crawl-300d-2M.vec crawl_base.fvecs",
     )
     parser.add_argument("input_file", help="Input .vec text file")
     parser.add_argument("output_file", help="Output .fvecs binary file")
-    parser.add_argument("-n", "--max-vectors", type=int, default=None,
-                        help="Maximum number of vectors to convert")
+    parser.add_argument(
+        "-n", "--max-vectors", type=int, default=None,
+        help="Maximum number of vectors to convert",
+    )
 
     args = parser.parse_args()
     success = convert_vec_to_fvecs(args.input_file, args.output_file, args.max_vectors)

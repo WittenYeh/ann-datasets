@@ -2,6 +2,8 @@
 """
 Extract subset from large vector datasets (fvecs, bvecs, ivecs).
 
+Uses memory-mapped I/O to avoid loading the entire source file into RAM.
+
 Usage:
   python extract_subset.py <input_file> <output_file> <num_vectors>
 
@@ -10,97 +12,52 @@ Example:
 """
 
 import argparse
-import struct
 import sys
 import os
-
-
-def get_format_info(filename):
-    """Determine vector format from file extension."""
-    ext = filename.lower().split('.')[-1]
-    if ext == 'fvecs':
-        return 'f', 4
-    elif ext == 'bvecs':
-        return 'B', 1
-    elif ext == 'ivecs':
-        return 'i', 4
-    else:
-        raise ValueError(f"Unsupported file extension: {ext}")
-
-
-def extract_subset(input_file, output_file, num_vectors):
-    """Extract first N vectors from input file to output file."""
-
-    if not os.path.exists(input_file):
-        print(f"Error: Input file '{input_file}' not found.", file=sys.stderr)
-        return False
-
-    try:
-        format_char, elem_size = get_format_info(input_file)
-    except ValueError as e:
-        print(f"Error: {e}", file=sys.stderr)
-        return False
-
-    print(f"Extracting {num_vectors:,} vectors from {input_file}...")
-
-    with open(input_file, 'rb') as fin, open(output_file, 'wb') as fout:
-        # Read first vector to get dimension
-        dim_bytes = fin.read(4)
-        if len(dim_bytes) < 4:
-            print("Error: Input file is empty or corrupted.", file=sys.stderr)
-            return False
-
-        dim = struct.unpack('i', dim_bytes)[0]
-        vec_size_bytes = 4 + dim * elem_size
-
-        # Reset to beginning
-        fin.seek(0)
-
-        # Copy vectors
-        vectors_copied = 0
-        chunk_size = 1000  # Copy 1000 vectors at a time
-
-        while vectors_copied < num_vectors:
-            vectors_to_copy = min(chunk_size, num_vectors - vectors_copied)
-            bytes_to_copy = vectors_to_copy * vec_size_bytes
-
-            data = fin.read(bytes_to_copy)
-            if len(data) < bytes_to_copy:
-                print(f"Warning: Only {vectors_copied} vectors available in input file.")
-                break
-
-            fout.write(data)
-            vectors_copied += vectors_to_copy
-
-            if vectors_copied % 100000 == 0:
-                print(f"  Progress: {vectors_copied:,} / {num_vectors:,} vectors")
-
-    print(f"✓ Successfully extracted {vectors_copied:,} vectors to {output_file}")
-
-    # Show file sizes
-    input_size = os.path.getsize(input_file)
-    output_size = os.path.getsize(output_file)
-    print(f"  Input size:  {format_size(input_size)}")
-    print(f"  Output size: {format_size(output_size)}")
-
-    return True
+import numpy as np
+from vecs_io import mmap_by_ext, write_by_ext
 
 
 def format_size(size_bytes):
     """Format file size in human-readable format."""
-    for unit in ['B', 'KB', 'MB', 'GB', 'TB']:
+    for unit in ["B", "KB", "MB", "GB", "TB"]:
         if size_bytes < 1024.0:
             return f"{size_bytes:.2f} {unit}"
         size_bytes /= 1024.0
     return f"{size_bytes:.2f} PB"
 
 
+def extract_subset(input_file, output_file, num_vectors):
+    """Extract first N vectors via memory-mapped slice + vectorized write."""
+    if not os.path.exists(input_file):
+        print(f"Error: Input file '{input_file}' not found.", file=sys.stderr)
+        return False
+
+    print(f"Memory-mapping {input_file}...")
+    data = mmap_by_ext(input_file)
+    n, d = data.shape
+    print(f"  Source: {n:,} vectors, {d} dimensions")
+
+    actual = min(num_vectors, n)
+    if actual < num_vectors:
+        print(f"  Warning: only {n:,} vectors available, extracting all")
+
+    print(f"Extracting first {actual:,} vectors...")
+    subset = np.array(data[:actual])  # copy slice into RAM
+
+    # Determine output dtype: bvecs stays uint8, fvecs/ivecs stay as-is
+    write_by_ext(output_file, subset)
+
+    output_size = os.path.getsize(output_file)
+    print(f"Done. {actual:,} vectors written to {output_file} ({format_size(output_size)})")
+    return True
+
+
 def main():
     parser = argparse.ArgumentParser(
         description="Extract subset from large vector datasets",
-        epilog="Example: python extract_subset.py bigann_base.bvecs sift10m_base.bvecs 10000000"
+        epilog="Example: python extract_subset.py bigann_base.bvecs sift10m_base.bvecs 10000000",
     )
-
     parser.add_argument("input_file", help="Input vector file (fvecs/bvecs/ivecs)")
     parser.add_argument("output_file", help="Output vector file")
     parser.add_argument("num_vectors", type=int, help="Number of vectors to extract")

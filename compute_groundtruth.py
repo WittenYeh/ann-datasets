@@ -10,52 +10,10 @@ Example:
 """
 
 import argparse
-import struct
 import sys
 import os
 import numpy as np
-
-
-def read_vecs(filename):
-    """Read fvecs or bvecs file into a numpy array."""
-    ext = filename.lower().split('.')[-1]
-
-    if ext == 'fvecs':
-        with open(filename, 'rb') as f:
-            d = struct.unpack('i', f.read(4))[0]
-            f.seek(0, 2)
-            n = f.tell() // (4 + d * 4)
-            f.seek(0)
-            vecs = np.zeros((n, d), dtype=np.float32)
-            for i in range(n):
-                f.read(4)  # skip dim
-                vecs[i] = np.frombuffer(f.read(d * 4), dtype=np.float32)
-        return vecs
-
-    elif ext == 'bvecs':
-        with open(filename, 'rb') as f:
-            d = struct.unpack('i', f.read(4))[0]
-            f.seek(0, 2)
-            n = f.tell() // (4 + d)
-            f.seek(0)
-            vecs = np.zeros((n, d), dtype=np.float32)
-            for i in range(n):
-                f.read(4)  # skip dim
-                vecs[i] = np.frombuffer(f.read(d), dtype=np.uint8).astype(np.float32)
-        return vecs
-
-    else:
-        raise ValueError(f"Unsupported format: {ext}")
-
-
-def write_ivecs(filename, ids):
-    """Write integer vectors in ivecs format."""
-    n, k = ids.shape
-    ids = ids.astype(np.int32)
-    with open(filename, 'wb') as f:
-        for i in range(n):
-            f.write(struct.pack('i', k))
-            f.write(ids[i].tobytes())
+from vecs_io import fvecs_mmap, fvecs_read, bvecs_mmap, bvecs_read, ivecs_write
 
 
 def compute_groundtruth(base_file, query_file, output_file, k):
@@ -66,13 +24,26 @@ def compute_groundtruth(base_file, query_file, output_file, k):
         print("Error: FAISS is required. Install with: pip install faiss-cpu", file=sys.stderr)
         sys.exit(1)
 
-    print(f"Loading base vectors from {base_file}...")
-    xb = read_vecs(base_file)
+    base_ext = base_file.rsplit(".", 1)[-1].lower()
+    query_ext = query_file.rsplit(".", 1)[-1].lower()
+
+    # Memory-map base vectors (zero-copy for large files)
+    print(f"Memory-mapping base vectors from {base_file}...")
+    if base_ext == "bvecs":
+        xb_raw = bvecs_mmap(base_file)
+        xb = np.ascontiguousarray(xb_raw, dtype="float32")
+    else:
+        xb_raw = fvecs_mmap(base_file)
+        xb = np.ascontiguousarray(xb_raw, dtype="float32")
     nb, d = xb.shape
     print(f"  Base: {nb:,} vectors, {d} dimensions")
 
+    # Fully read query vectors (small file)
     print(f"Loading query vectors from {query_file}...")
-    xq = read_vecs(query_file)
+    if query_ext == "bvecs":
+        xq = bvecs_read(query_file).astype("float32")
+    else:
+        xq = fvecs_read(query_file)
     nq, dq = xq.shape
     print(f"  Query: {nq:,} vectors, {dq} dimensions")
 
@@ -81,11 +52,10 @@ def compute_groundtruth(base_file, query_file, output_file, k):
     print(f"Building FAISS IndexFlatL2 and searching (k={k})...")
     index = faiss.IndexFlatL2(d)
     index.add(xb)
-
-    D, I = index.search(xq, k)
+    _, I = index.search(xq, k)
 
     print(f"Writing ground truth to {output_file}...")
-    write_ivecs(output_file, I)
+    ivecs_write(output_file, I.astype("int32"))
 
     output_size = os.path.getsize(output_file)
     print(f"Done. {nq:,} queries x {k} neighbors = {output_size / 1024 / 1024:.1f} MB")
