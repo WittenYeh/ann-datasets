@@ -94,17 +94,29 @@ python3 ../preview_dataset.py sift_base.fvecs --preview 5  # Preview first 5 vec
 | `sift-100m` | SIFT-100M | 128 | 100M | 10K | Image | http://corpus-texmex.irisa.fr | Subset of SIFT1B (see `big-ann`) |
 | `big-ann` | SIFT-1B | 128 | 1B | 10K | Image | http://corpus-texmex.irisa.fr | `http://corpus-texmex.irisa.fr/` |
 | `gist-1m` | GIST-1M | 960 | 1M | 1K | Image | http://corpus-texmex.irisa.fr | `ftp://ftp.irisa.fr/local/texmex/corpus/gist.tar.gz` |
-| `deep-1m` | Deep-1M | 96 | 1M | 10K | Image | https://research.yandex.com/blog/benchmarks-for-billion-scale-similarity-search | `https://storage.yandexcloud.net/yandex-research/ann-datasets/deep1b/` |
+| `deep-1m` | Deep-1M | 96 | 1M | 10K | Image | https://research.yandex.com/blog/benchmarks-for-billion-scale-similarity-search | Subset of Deep1B (see `deep-1b`) |
+| `deep-10m` | Deep-10M | 96 | 10M | 10K | Image | https://research.yandex.com/blog/benchmarks-for-billion-scale-similarity-search | Subset of Deep1B (see `deep-1b`) |
+| `deep-100m` | Deep-100M | 96 | 100M | 10K | Image | https://research.yandex.com/blog/benchmarks-for-billion-scale-similarity-search | Subset of Deep1B (see `deep-1b`) |
+| `deep-1b` | Deep-1B | 96 | 1B | 10K | Image | https://research.yandex.com/blog/benchmarks-for-billion-scale-similarity-search | `https://storage.yandexcloud.net/yandex-research/ann-datasets/DEEP/` |
+| `cifar60k` | CIFAR-60K | 512 | 60K | 1K | Image | [CUHK GQR](https://www.cse.cuhk.edu.hk/systems/hash/gqr/datasets.html) | `https://www.cse.cuhk.edu.hk/systems/hash/gqr/dataset/cifar60k.tar.gz` |
+| `imagenet` | ImageNet | 150 | ~2.3M | - | Image | [CUHK GQR](https://www.cse.cuhk.edu.hk/systems/hash/gqr/datasets.html) | `https://www.cse.cuhk.edu.hk/systems/hash/gqr/dataset/imagenet.tar.gz` |
+| `ukbench` | UKBench | 128 | ~1.1M | - | Image | [CUHK GQR](https://www.cse.cuhk.edu.hk/systems/hash/gqr/datasets.html) | `https://www.cse.cuhk.edu.hk/systems/hash/gqr/dataset/ukbench.tar.gz` |
+| `tiny5m` | Tiny-5M | 384 | 5M | - | Image | [CUHK GQR](https://www.cse.cuhk.edu.hk/systems/hash/gqr/datasets.html) | `https://www.cse.cuhk.edu.hk/systems/hash/gqr/dataset/tiny5m.tar.gz` |
+| `nuswide` | NUS-WIDE | 500 | ~269K | - | Multimedia | [CUHK GQR](https://www.cse.cuhk.edu.hk/systems/hash/gqr/datasets.html) | `https://www.cse.cuhk.edu.hk/systems/hash/gqr/dataset/nuswide.tar.gz` |
 | `msong` | MSONG | 420 | ~992K | - | Audio | http://www.ifs.tuwien.ac.at/mir/msd/ | `https://www.cse.cuhk.edu.hk/systems/hash/gqr/dataset/msong.tar.gz` |
 | `audio` | Audio | 192 | ~54K | - | Audio | https://www.cs.princeton.edu/cass/demos.htm | `https://www.cse.cuhk.edu.hk/systems/hash/gqr/dataset/audio.tar.gz` |
+| `yahoomusic` | Yahoo Music | 300 | ~1.8M | 1K | Audio | [CUHK GQR](https://www.cse.cuhk.edu.hk/systems/hash/gqr/datasets.html) | `https://www.cse.cuhk.edu.hk/systems/hash/gqr/dataset/yahoomusic.tar.gz` |
 | `glove` | GloVe | 100 | ~1.2M | - | Text | http://nlp.stanford.edu/projects/glove/ | `https://www.cse.cuhk.edu.hk/systems/hash/gqr/dataset/glove1.2m.tar.gz` |
+| `word2vec` | Word2Vec | 300 | 1M | - | Text | [CUHK GQR](https://www.cse.cuhk.edu.hk/systems/hash/gqr/datasets.html) | `https://www.cse.cuhk.edu.hk/systems/hash/gqr/dataset/word2vec.tar.gz` |
 | `crawl` | Crawl | 300 | ~2M | - | Text | http://commoncrawl.org/ | `https://dl.fbaipublicfiles.com/fasttext/vectors-english/crawl-300d-2M.vec.zip` |
 
 ### Notes
 
 - **SIFT / GIST**: Classic Texmex corpus datasets. Ready-to-use fvecs format.
-- **Deep-1M**: CNN features from Yandex Deep1B, reduced by PCA and L2-normalized. Extracted as a 1M subset.
-- **MSONG / Audio / GloVe**: Ready-to-use fvecs from [CUHK GQR](https://www.cse.cuhk.edu.hk/systems/hash/gqr/datasets.html). No groundtruth included; must be computed separately.
+- **Deep-1M / Deep-10M / Deep-100M**: CNN features extracted from Deep1B as subsets of varying scales. Require Deep1B to be downloaded first.
+- **Deep-1B**: Full 1B CNN feature vectors from Yandex. Downloaded as `.fbin` format and auto-converted to fvecs.
+- **CIFAR-60K / ImageNet / UKBench / Tiny-5M / NUS-WIDE**: Image feature datasets from [CUHK GQR](https://www.cse.cuhk.edu.hk/systems/hash/gqr/datasets.html). Ground truth auto-computed with k=100.
+- **MSONG / Audio / GloVe / Word2Vec / Yahoo Music**: Ready-to-use fvecs from [CUHK GQR](https://www.cse.cuhk.edu.hk/systems/hash/gqr/datasets.html). Ground truth auto-computed with k=100 during setup.
 - **Crawl**: fastText Common Crawl 300d word vectors. Downloaded as text format (.vec) and auto-converted to fvecs. Query/groundtruth must be generated separately.
 - **SIFT-10M / SIFT-100M / SIFT-1B**: Large-scale SIFT variants. 10M and 100M are auto-extracted from SIFT1B.
 
@@ -121,11 +133,13 @@ cd sift-10m && make all
 # Extract SIFT100M from SIFT1B (auto-downloads SIFT1B if needed)
 cd sift-100m && make all
 
-# Extract Deep1M from Deep1B (downloads and extracts automatically)
-cd deep-1m && make setup
+# Extract Deep1M/10M/100M from Deep1B (auto-downloads Deep1B if needed)
+cd deep-1m && make all
+cd deep-10m && make all
+cd deep-100m && make all
 ```
 
-**Note**: SIFT10M and SIFT100M will automatically download and setup SIFT1B if it's not already present. The extraction process reuses the SIFT1B files without duplicating the large dataset.
+**Note**: SIFT10M and SIFT100M will automatically download and setup SIFT1B if it's not already present. Deep1M, Deep10M, and Deep100M similarly depend on Deep1B. The extraction process reuses the source files without duplicating the large dataset.
 
 The `extract_subset.py` tool can also be used directly:
 
@@ -136,7 +150,7 @@ python3 extract_subset.py bigann_base.bvecs sift10m_base.bvecs 10000000
 ### Dataset Dependencies
 
 - **sift-10m** and **sift-100m** automatically initialize **big-ann** if needed
-- **deep-1m** downloads Deep1B automatically and extracts the subset
+- **deep-1m**, **deep-10m**, and **deep-100m** automatically initialize **deep-1b** if needed
 
 ## How to Add a New Dataset
 
