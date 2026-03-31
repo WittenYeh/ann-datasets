@@ -2,9 +2,7 @@
 """
 Convert fastText .vec text format to fvecs binary format.
 
-fastText .vec format:
-  First line: <num_vectors> <dimension>
-  Subsequent lines: <word> <float1> <float2> ... <floatN>
+Writes output in streaming chunks to avoid holding all vectors in RAM.
 
 Usage:
   python vec_to_fvecs.py <input.vec> <output.fvecs> [--max-vectors N]
@@ -19,6 +17,8 @@ import os
 import numpy as np
 from vecs_io import fvecs_write
 
+WRITE_CHUNK = 100_000  # flush to disk every 100K vectors
+
 
 def convert_vec_to_fvecs(input_file, output_file, max_vectors=None):
     """Convert fastText .vec text file to fvecs binary format."""
@@ -27,8 +27,11 @@ def convert_vec_to_fvecs(input_file, output_file, max_vectors=None):
         return False
 
     print(f"Reading {input_file}...")
+    vectors_written = 0
 
-    with open(input_file, "r", encoding="utf-8", errors="replace") as fin:
+    with open(input_file, "r", encoding="utf-8", errors="replace") as fin, \
+         open(output_file, "wb") as fout:
+
         header = fin.readline().strip().split()
         num_vectors = int(header[0])
         dim = int(header[1])
@@ -38,28 +41,43 @@ def convert_vec_to_fvecs(input_file, output_file, max_vectors=None):
             num_vectors = min(num_vectors, max_vectors)
             print(f"  Limiting to {num_vectors:,} vectors")
 
-        vecs = []
+        buf = np.empty((WRITE_CHUNK, dim), dtype=np.float32)
+        buf_idx = 0
+
         for line in fin:
-            if len(vecs) >= num_vectors:
+            if vectors_written + buf_idx >= num_vectors:
                 break
-            parts = line.strip().split()
+            parts = line.split()
             if len(parts) != dim + 1:
                 continue
             try:
-                vec = [float(x) for x in parts[1:]]
+                buf[buf_idx] = [float(x) for x in parts[1:]]
             except ValueError:
                 continue
-            if len(vec) != dim:
-                continue
-            vecs.append(vec)
-            if len(vecs) % 100000 == 0:
-                print(f"  Progress: {len(vecs):,} / {num_vectors:,}")
+            buf_idx += 1
 
-    data = np.array(vecs, dtype=np.float32)
-    print(f"Writing {output_file}...")
-    fvecs_write(output_file, data)
-    print(f"  -> {output_file}: {data.shape[0]:,} vectors, dim={dim}")
+            if buf_idx == WRITE_CHUNK:
+                _flush(fout, buf, buf_idx, dim)
+                vectors_written += buf_idx
+                buf_idx = 0
+                print(f"  Progress: {vectors_written:,} / {num_vectors:,}")
+
+        # flush remainder
+        if buf_idx > 0:
+            _flush(fout, buf, buf_idx, dim)
+            vectors_written += buf_idx
+
+    print(f"  -> {output_file}: {vectors_written:,} vectors, dim={dim}")
     return True
+
+
+def _flush(fout, buf, count, dim):
+    """Write `count` rows from buf to fout in fvecs format."""
+    chunk = buf[:count]
+    block = np.empty((count, dim + 1), dtype="float32")
+    block[:, 0] = np.array([dim], dtype="int32").view("float32")
+    block[:, 1:] = chunk
+    block.tofile(fout)
 
 
 def main():
