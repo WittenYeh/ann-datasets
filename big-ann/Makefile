@@ -79,7 +79,7 @@ $(QUERY_FILE): $(QUERY_FILE_GZ)
 $(TRUTH_FILE): $(GND_ARCHIVE)
 	@if [ ! -f "$(TRUTH_FILE)" ]; then \
 		echo "-> Extracting ground truth from archive..."; \
-		tar -xzf $(GND_ARCHIVE); \
+		tar --warning=no-alone-zero-block -xzf $(GND_ARCHIVE); \
 	else \
 		echo "-> $(TRUTH_FILE) already exists, skipping extraction."; \
 	fi

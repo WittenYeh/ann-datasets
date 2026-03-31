@@ -23,7 +23,7 @@ setup: $(FINAL_FILES)
 
 $(BASE_FILE) $(QUERY_FILE): $(ARCHIVE_FILE)
 	@echo "-> Extracting $(ARCHIVE_FILE)..."
-	tar -xzf $(ARCHIVE_FILE)
+	tar --warning=no-alone-zero-block -xzf $(ARCHIVE_FILE)
 	mv $(EXTRACT_DIR)/$(BASE_FILE) $(EXTRACT_DIR)/$(QUERY_FILE) .
 	rm -rf $(EXTRACT_DIR)
 

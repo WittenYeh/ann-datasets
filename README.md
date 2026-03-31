@@ -99,16 +99,22 @@ python3 ../preview_dataset.py sift_base.fvecs --preview 5  # Preview first 5 vec
 | `deep-100m` | Deep-100M | 96 | 100M | 10K | Image | https://research.yandex.com/blog/benchmarks-for-billion-scale-similarity-search | Subset of Deep1B (see `deep-1b`) |
 | `deep-1b` | Deep-1B | 96 | 1B | 10K | Image | https://research.yandex.com/blog/benchmarks-for-billion-scale-similarity-search | `https://storage.yandexcloud.net/yandex-research/ann-datasets/DEEP/` |
 | `cifar60k` | CIFAR-60K | 512 | 60K | 1K | Image | [CUHK GQR](https://www.cse.cuhk.edu.hk/systems/hash/gqr/datasets.html) | `https://www.cse.cuhk.edu.hk/systems/hash/gqr/dataset/cifar60k.tar.gz` |
-| `imagenet` | ImageNet | 150 | ~2.3M | - | Image | [CUHK GQR](https://www.cse.cuhk.edu.hk/systems/hash/gqr/datasets.html) | `https://www.cse.cuhk.edu.hk/systems/hash/gqr/dataset/imagenet.tar.gz` |
-| `ukbench` | UKBench | 128 | ~1.1M | - | Image | [CUHK GQR](https://www.cse.cuhk.edu.hk/systems/hash/gqr/datasets.html) | `https://www.cse.cuhk.edu.hk/systems/hash/gqr/dataset/ukbench.tar.gz` |
-| `tiny5m` | Tiny-5M | 384 | 5M | - | Image | [CUHK GQR](https://www.cse.cuhk.edu.hk/systems/hash/gqr/datasets.html) | `https://www.cse.cuhk.edu.hk/systems/hash/gqr/dataset/tiny5m.tar.gz` |
-| `nuswide` | NUS-WIDE | 500 | ~269K | - | Multimedia | [CUHK GQR](https://www.cse.cuhk.edu.hk/systems/hash/gqr/datasets.html) | `https://www.cse.cuhk.edu.hk/systems/hash/gqr/dataset/nuswide.tar.gz` |
-| `msong` | MSONG | 420 | ~992K | - | Audio | http://www.ifs.tuwien.ac.at/mir/msd/ | `https://www.cse.cuhk.edu.hk/systems/hash/gqr/dataset/msong.tar.gz` |
-| `audio` | Audio | 192 | ~54K | - | Audio | https://www.cs.princeton.edu/cass/demos.htm | `https://www.cse.cuhk.edu.hk/systems/hash/gqr/dataset/audio.tar.gz` |
+| `imagenet` | ImageNet | 150 | ~2.3M | 200 | Image | [CUHK GQR](https://www.cse.cuhk.edu.hk/systems/hash/gqr/datasets.html) | `https://www.cse.cuhk.edu.hk/systems/hash/gqr/dataset/imagenet.tar.gz` |
+| `ukbench` | UKBench | 128 | ~1.1M | 200 | Image | [CUHK GQR](https://www.cse.cuhk.edu.hk/systems/hash/gqr/datasets.html) | `https://www.cse.cuhk.edu.hk/systems/hash/gqr/dataset/ukbench.tar.gz` |
+| `tiny5m` | Tiny-5M | 384 | 5M | 1K | Image | [CUHK GQR](https://www.cse.cuhk.edu.hk/systems/hash/gqr/datasets.html) | `https://www.cse.cuhk.edu.hk/systems/hash/gqr/dataset/tiny5m.tar.gz` |
+| `nuswide` | NUS-WIDE | 500 | ~269K | 1K | Multimedia | [CUHK GQR](https://www.cse.cuhk.edu.hk/systems/hash/gqr/datasets.html) | `https://www.cse.cuhk.edu.hk/systems/hash/gqr/dataset/nuswide.tar.gz` |
+| `msong` | MSONG | 420 | ~992K | 1K | Audio | http://www.ifs.tuwien.ac.at/mir/msd/ | `https://www.cse.cuhk.edu.hk/systems/hash/gqr/dataset/msong.tar.gz` |
+| `audio` | Audio | 192 | ~54K | 200 | Audio | https://www.cs.princeton.edu/cass/demos.htm | `https://www.cse.cuhk.edu.hk/systems/hash/gqr/dataset/audio.tar.gz` |
 | `yahoomusic` | Yahoo Music | 300 | ~1.8M | 1K | Audio | [CUHK GQR](https://www.cse.cuhk.edu.hk/systems/hash/gqr/datasets.html) | `https://www.cse.cuhk.edu.hk/systems/hash/gqr/dataset/yahoomusic.tar.gz` |
-| `glove` | GloVe | 100 | ~1.2M | - | Text | http://nlp.stanford.edu/projects/glove/ | `https://www.cse.cuhk.edu.hk/systems/hash/gqr/dataset/glove1.2m.tar.gz` |
-| `word2vec` | Word2Vec | 300 | 1M | - | Text | [CUHK GQR](https://www.cse.cuhk.edu.hk/systems/hash/gqr/datasets.html) | `https://www.cse.cuhk.edu.hk/systems/hash/gqr/dataset/word2vec.tar.gz` |
-| `crawl` | Crawl | 300 | ~2M | - | Text | http://commoncrawl.org/ | `https://dl.fbaipublicfiles.com/fasttext/vectors-english/crawl-300d-2M.vec.zip` |
+| `glove` | GloVe | 200 | ~1.2M | 1K | Text | http://nlp.stanford.edu/projects/glove/ | `https://www.cse.cuhk.edu.hk/systems/hash/gqr/dataset/glove1.2m.tar.gz` |
+| `word2vec` | Word2Vec | 300 | 1M | 1K | Text | [CUHK GQR](https://www.cse.cuhk.edu.hk/systems/hash/gqr/datasets.html) | `https://www.cse.cuhk.edu.hk/systems/hash/gqr/dataset/word2vec.tar.gz` |
+| `crawl` | Crawl | 300 | ~2M | 1K* | Text | http://commoncrawl.org/ | `https://dl.fbaipublicfiles.com/fasttext/vectors-english/crawl-300d-2M.vec.zip` |
+
+**\*** Datasets marked with `*` (Crawl) do not provide query vectors in the original archive. For these datasets, we randomly sample 1,000 vectors (without replacement, seed=42) from the base set as queries, and remove the sampled vectors from the base set to ensure no overlap. Use `extract_query.py` to perform this extraction:
+
+```bash
+python3 extract_query.py <input_base.fvecs> <output_base.fvecs> <output_query.fvecs> --num-queries 1000 --seed 42
+```
 
 ### Notes
 
@@ -116,8 +122,8 @@ python3 ../preview_dataset.py sift_base.fvecs --preview 5  # Preview first 5 vec
 - **Deep-1M / Deep-10M / Deep-100M**: CNN features extracted from Deep1B as subsets of varying scales. Require Deep1B to be downloaded first.
 - **Deep-1B**: Full 1B CNN feature vectors from Yandex. Downloaded as `.fbin` format and auto-converted to fvecs.
 - **CIFAR-60K / ImageNet / UKBench / Tiny-5M / NUS-WIDE**: Image feature datasets from [CUHK GQR](https://www.cse.cuhk.edu.hk/systems/hash/gqr/datasets.html). Ground truth auto-computed with k=100.
-- **MSONG / Audio / GloVe / Word2Vec / Yahoo Music**: Ready-to-use fvecs from [CUHK GQR](https://www.cse.cuhk.edu.hk/systems/hash/gqr/datasets.html). Ground truth auto-computed with k=100 during setup.
-- **Crawl**: fastText Common Crawl 300d word vectors. Downloaded as text format (.vec) and auto-converted to fvecs. Query/groundtruth must be generated separately.
+- **MSONG / Audio / Word2Vec / Yahoo Music**: Ready-to-use fvecs from [CUHK GQR](https://www.cse.cuhk.edu.hk/systems/hash/gqr/datasets.html). Ground truth auto-computed with k=100 during setup.
+- **Crawl**: fastText Common Crawl 300d word vectors. Only base vectors are provided; query vectors are extracted using `extract_query.py` and ground truth must be computed separately.
 - **SIFT-10M / SIFT-100M / SIFT-1B**: Large-scale SIFT variants. 10M and 100M are auto-extracted from SIFT1B.
 
 ## Working with Large Datasets

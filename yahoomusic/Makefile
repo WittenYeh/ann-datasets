@@ -26,7 +26,7 @@ setup: $(FINAL_FILES)
 
 $(ALL_FILE): $(ARCHIVE_FILE)
 	@echo "-> Extracting $(ARCHIVE_FILE)..."
-	tar -xzf $(ARCHIVE_FILE)
+	tar --warning=no-alone-zero-block -xzf $(ARCHIVE_FILE)
 	mv $(EXTRACT_DIR)/$(ALL_FILE) .
 	rm -rf $(EXTRACT_DIR)
 

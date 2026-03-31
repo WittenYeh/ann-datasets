@@ -33,7 +33,7 @@ $(ARCHIVE_FILE):
 $(FINAL_FILES): $(ARCHIVE_FILE)
 	@if [ ! -f "$(firstword $(FINAL_FILES))" ]; then \
 		echo "-> Extracting files from $(ARCHIVE_FILE)..."; \
-		tar -xzf $(ARCHIVE_FILE); \
+		tar --warning=no-alone-zero-block -xzf $(ARCHIVE_FILE); \
 		echo "-> Moving files from $(EXTRACT_DIR)/ subdirectory..."; \
 		for file in $(FINAL_FILES); do \
 			if [ -f "$(EXTRACT_DIR)/$$file" ]; then \
