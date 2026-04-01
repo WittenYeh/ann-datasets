@@ -10,14 +10,17 @@ VEC_FILE       := crawl-300d-2M.vec
 URL            := https://dl.fbaipublicfiles.com/fasttext/vectors-english/crawl-300d-2M.vec.zip
 
 BASE_FILE      := crawl_base.fvecs
-FINAL_FILES    := $(BASE_FILE)
+QUERY_FILE     := crawl_query.fvecs
+TRUTH_FILE     := crawl_groundtruth.ivecs
+ORIG_BASE_FILE := crawl_base_orig.fvecs
+NUM_QUERIES    := 1000
+FINAL_FILES    := $(BASE_FILE) $(QUERY_FILE) $(TRUTH_FILE)
 # --- End of Configuration ---
 
 all: setup
 
-setup: $(BASE_FILE)
-	@echo "-> $(DATASET_NAME) base vectors ready!"
-	@echo "NOTE: Query vectors and ground truth must be generated separately."
+setup: $(FINAL_FILES)
+	@echo "-> $(DATASET_NAME) dataset setup complete!"
 
 # Download
 $(ARCHIVE_FILE):
@@ -37,14 +40,25 @@ $(VEC_FILE): $(ARCHIVE_FILE)
 		echo "-> $(VEC_FILE) already exists, skipping extraction."; \
 	fi
 
-# Convert to fvecs
-$(BASE_FILE): $(VEC_FILE)
-	@if [ ! -f "$(BASE_FILE)" ]; then \
+# Convert to fvecs (produces the original base before query extraction)
+$(ORIG_BASE_FILE): $(VEC_FILE)
+	@if [ ! -f "$(ORIG_BASE_FILE)" ]; then \
 		echo "-> Converting .vec to .fvecs format..."; \
-		python3 ../vec_to_fvecs.py $(VEC_FILE) $(BASE_FILE); \
+		python3 ../vec_to_fvecs.py $(VEC_FILE) $(ORIG_BASE_FILE); \
 	else \
-		echo "-> $(BASE_FILE) already exists, skipping conversion."; \
+		echo "-> $(ORIG_BASE_FILE) already exists, skipping conversion."; \
 	fi
+
+# Extract query vectors and compact base (removes query vectors from base)
+$(BASE_FILE) $(QUERY_FILE) &: $(ORIG_BASE_FILE)
+	@echo "-> Extracting $(NUM_QUERIES) random query vectors from base..."
+	python3 ../extract_query.py $(ORIG_BASE_FILE) $(BASE_FILE) $(QUERY_FILE) \
+		--num-queries $(NUM_QUERIES) --seed 42
+
+# Compute ground truth
+$(TRUTH_FILE): $(BASE_FILE) $(QUERY_FILE)
+	@echo "-> Computing ground truth (k=100)..."
+	python3 ../compute_groundtruth.py $(BASE_FILE) $(QUERY_FILE) $(TRUTH_FILE) --k 100
 
 # Download only
 fetch: $(ARCHIVE_FILE)
@@ -61,7 +75,7 @@ info:
 # Clean converted files
 clean:
 	@echo "-> Removing converted data files..."
-	rm -f $(FINAL_FILES)
+	rm -f $(FINAL_FILES) $(ORIG_BASE_FILE)
 
 # Clean source files
 clean-source:

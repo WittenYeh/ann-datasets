@@ -28,149 +28,146 @@ make clean      # Remove extracted files
 make clean-all  # Remove everything including archives
 ```
 
-## Features
-
-- **One-Command Setup**: Download and extract with `make all`
-- **Auto-Skip Existing**: Smart checks prevent redundant downloads/extractions
-- **Dataset Preview**: Built-in tool to inspect vector files
-- **Multiple Formats**: Support for fvecs, bvecs, ivecs formats
-- **Large Dataset Support**: Optimized for datasets up to 1B+ vectors
-
-## Download and Decompress Target Dataset
-
-Goto the subdirectory of target dataset you want to get.
-
-For example, to get SIFT-1M dataset, run:
-
-```bash
-cd ./sift-1m
-```
-
-Then run:
-
-```bash
-make all
-```
-
-The download and extraction process includes:
-- **Auto-skip existing files**: If files already exist, they won't be re-downloaded or re-extracted
-- **Auto-extraction**: Archives are automatically extracted after download
-- **Progress tracking**: Download progress is displayed with progress bars
-
-## Inspect Dataset Information
-
-After downloading a dataset, you can inspect its properties:
-
-```bash
-make info
-```
-
-This will display:
-- Vector format (fvecs/bvecs/ivecs)
-- Data type (float32/uint8/int32)
-- Number of vectors
-- Vector dimension
-- File size
-
-You can also use the `preview_dataset.py` tool directly:
-
-```bash
-python3 ../preview_dataset.py sift_base.fvecs
-python3 ../preview_dataset.py sift_base.fvecs --preview 5  # Preview first 5 vectors
-```
-
-## Clean Target Dataset
-
--   `make clean`: Delete the extracted data files.
--   `make clean-all`: Delete both the extracted files and the original downloaded archive.
-
 ## Supported Datasets
 
-| Directory | Dataset | Dim | # Base | # Query | Type | Homepage | Download URL |
-|-----------|---------|-----|--------|---------|------|----------|--------------|
-| `sift-10k` | SIFT-10K | 128 | 10K | 100 | Image | http://corpus-texmex.irisa.fr | `ftp://ftp.irisa.fr/local/texmex/corpus/siftsmall.tar.gz` |
-| `sift-1m` | SIFT-1M | 128 | 1M | 10K | Image | http://corpus-texmex.irisa.fr | `ftp://ftp.irisa.fr/local/texmex/corpus/sift.tar.gz` |
-| `sift-10m` | SIFT-10M | 128 | 10M | 10K | Image | http://corpus-texmex.irisa.fr | Subset of SIFT1B (see `big-ann`) |
-| `sift-100m` | SIFT-100M | 128 | 100M | 10K | Image | http://corpus-texmex.irisa.fr | Subset of SIFT1B (see `big-ann`) |
-| `big-ann` | SIFT-1B | 128 | 1B | 10K | Image | http://corpus-texmex.irisa.fr | `http://corpus-texmex.irisa.fr/` |
-| `gist-1m` | GIST-1M | 960 | 1M | 1K | Image | http://corpus-texmex.irisa.fr | `ftp://ftp.irisa.fr/local/texmex/corpus/gist.tar.gz` |
-| `deep-1m` | Deep-1M | 96 | 1M | 10K | Image | https://research.yandex.com/blog/benchmarks-for-billion-scale-similarity-search | Subset of Deep1B (see `deep-1b`) |
-| `deep-10m` | Deep-10M | 96 | 10M | 10K | Image | https://research.yandex.com/blog/benchmarks-for-billion-scale-similarity-search | Subset of Deep1B (see `deep-1b`) |
-| `deep-100m` | Deep-100M | 96 | 100M | 10K | Image | https://research.yandex.com/blog/benchmarks-for-billion-scale-similarity-search | Subset of Deep1B (see `deep-1b`) |
-| `deep-1b` | Deep-1B | 96 | 1B | 10K | Image | https://research.yandex.com/blog/benchmarks-for-billion-scale-similarity-search | `https://storage.yandexcloud.net/yandex-research/ann-datasets/DEEP/` |
-| `cifar60k` | CIFAR-60K | 512 | 60K | 1K | Image | [CUHK GQR](https://www.cse.cuhk.edu.hk/systems/hash/gqr/datasets.html) | `https://www.cse.cuhk.edu.hk/systems/hash/gqr/dataset/cifar60k.tar.gz` |
-| `imagenet` | ImageNet | 150 | ~2.3M | 200 | Image | [CUHK GQR](https://www.cse.cuhk.edu.hk/systems/hash/gqr/datasets.html) | `https://www.cse.cuhk.edu.hk/systems/hash/gqr/dataset/imagenet.tar.gz` |
-| `ukbench` | UKBench | 128 | ~1.1M | 200 | Image | [CUHK GQR](https://www.cse.cuhk.edu.hk/systems/hash/gqr/datasets.html) | `https://www.cse.cuhk.edu.hk/systems/hash/gqr/dataset/ukbench.tar.gz` |
-| `tiny5m` | Tiny-5M | 384 | 5M | 1K | Image | [CUHK GQR](https://www.cse.cuhk.edu.hk/systems/hash/gqr/datasets.html) | `https://www.cse.cuhk.edu.hk/systems/hash/gqr/dataset/tiny5m.tar.gz` |
-| `nuswide` | NUS-WIDE | 500 | ~269K | 1K | Multimedia | [CUHK GQR](https://www.cse.cuhk.edu.hk/systems/hash/gqr/datasets.html) | `https://www.cse.cuhk.edu.hk/systems/hash/gqr/dataset/nuswide.tar.gz` |
-| `msong` | MSONG | 420 | ~992K | 1K | Audio | http://www.ifs.tuwien.ac.at/mir/msd/ | `https://www.cse.cuhk.edu.hk/systems/hash/gqr/dataset/msong.tar.gz` |
-| `audio` | Audio | 192 | ~54K | 200 | Audio | https://www.cs.princeton.edu/cass/demos.htm | `https://www.cse.cuhk.edu.hk/systems/hash/gqr/dataset/audio.tar.gz` |
-| `yahoomusic` | Yahoo Music | 300 | ~1.8M | 1K | Audio | [CUHK GQR](https://www.cse.cuhk.edu.hk/systems/hash/gqr/datasets.html) | `https://www.cse.cuhk.edu.hk/systems/hash/gqr/dataset/yahoomusic.tar.gz` |
-| `glove` | GloVe | 200 | ~1.2M | 1K | Text | http://nlp.stanford.edu/projects/glove/ | `https://www.cse.cuhk.edu.hk/systems/hash/gqr/dataset/glove1.2m.tar.gz` |
-| `word2vec` | Word2Vec | 300 | 1M | 1K | Text | [CUHK GQR](https://www.cse.cuhk.edu.hk/systems/hash/gqr/datasets.html) | `https://www.cse.cuhk.edu.hk/systems/hash/gqr/dataset/word2vec.tar.gz` |
-| `crawl` | Crawl | 300 | ~2M | 1K* | Text | http://commoncrawl.org/ | `https://dl.fbaipublicfiles.com/fasttext/vectors-english/crawl-300d-2M.vec.zip` |
+| Directory | Dataset | Dim | # Base | # Query | Query Source | Type |
+|-----------|---------|-----|--------|---------|--------------|------|
+| `sift-1m` | SIFT-1M | 128 | 1M | 10K | Archive | Image |
+| `gist-1m` | GIST-1M | 960 | 1M | 1K | Archive | Image |
+| `deep-10m` | Deep-10M | 96 | 10M | 10K | Parent (Deep1B) | Image |
+| `crawl` | Crawl | 300 | ~2M | 1K | **Generated** | Text |
+| `msong` | MSONG | 420 | ~992K | 200 | Archive | Audio |
+| `glove` | GloVe | 100 | ~1.2M | 1K | Archive | Text |
+| `imagenet` | ImageNet | 150 | ~2.3M | 200 | Archive | Image |
+| `ukbench` | UKBench | 128 | ~1.1M | 200 | Archive | Image |
+| `yahoomusic` | Yahoo Music | 300 | ~1.8M | 1K | **Generated** | Latent |
+| `tiny5m` | Tiny-5M | 384 | 5M | 1K | Archive | Image |
 
-**\*** Datasets marked with `*` (Crawl) do not provide query vectors in the original archive. For these datasets, we randomly sample 1,000 vectors (without replacement, seed=42) from the base set as queries, and remove the sampled vectors from the base set to ensure no overlap. Use `extract_query.py` to perform this extraction:
+**Query Source** column:
+- **Archive**: Query vectors are provided in the original download archive by the dataset publisher.
+- **Parent**: Query vectors are copied from the parent dataset (e.g., Deep1B).
+- **Generated**: No query vectors in the original archive. We randomly sample vectors from the base set as queries and remove them from the base to ensure no overlap.
 
-```bash
-python3 extract_query.py <input_base.fvecs> <output_base.fvecs> <output_query.fvecs> --num-queries 1000 --seed 42
+## Utility Scripts
+
+### vecs_io.py — Shared I/O Module
+
+Memory-mapped and vectorized read/write for fvecs/bvecs/ivecs files, aligned with the conventions from [deep1b_gt](https://github.com/matsui528/deep1b_gt).
+
+```python
+from vecs_io import fvecs_mmap, fvecs_read, fvecs_write, ivecs_write
+
+# Memory-mapped read (zero-copy, ideal for large files)
+xb = fvecs_mmap("sift_base.fvecs")        # returns read-only (n, d) view
+xq = fvecs_read("sift_query.fvecs")       # returns contiguous (n, d) array
+
+# Vectorized write (no Python loops)
+fvecs_write("output.fvecs", data)          # data: (n, d) float32 array
+ivecs_write("output.ivecs", ids)           # ids: (n, k) int32 array
+
+# Auto-select by file extension
+from vecs_io import mmap_by_ext, read_by_ext, write_by_ext
+data = mmap_by_ext("sift_base.fvecs")      # auto-detects fvecs/bvecs/ivecs
 ```
 
-### Notes
+### compute_groundtruth.py — Exact k-NN Ground Truth
 
-- **SIFT / GIST**: Classic Texmex corpus datasets. Ready-to-use fvecs format.
-- **Deep-1M / Deep-10M / Deep-100M**: CNN features extracted from Deep1B as subsets of varying scales. Require Deep1B to be downloaded first.
-- **Deep-1B**: Full 1B CNN feature vectors from Yandex. Downloaded as `.fbin` format and auto-converted to fvecs.
-- **CIFAR-60K / ImageNet / UKBench / Tiny-5M / NUS-WIDE**: Image feature datasets from [CUHK GQR](https://www.cse.cuhk.edu.hk/systems/hash/gqr/datasets.html). Ground truth auto-computed with k=100.
-- **MSONG / Audio / Word2Vec / Yahoo Music**: Ready-to-use fvecs from [CUHK GQR](https://www.cse.cuhk.edu.hk/systems/hash/gqr/datasets.html). Ground truth auto-computed with k=100 during setup.
-- **Crawl**: fastText Common Crawl 300d word vectors. Only base vectors are provided; query vectors are extracted using `extract_query.py` and ground truth must be computed separately.
-- **SIFT-10M / SIFT-100M / SIFT-1B**: Large-scale SIFT variants. 10M and 100M are auto-extracted from SIFT1B.
-
-## Working with Large Datasets
-
-### Extracting Subsets
-
-For large datasets like SIFT1B and Deep1B, you can extract smaller subsets:
+Computes exact ground truth using FAISS brute-force search. For large datasets, automatically switches to chunked search to bound memory usage.
 
 ```bash
-# Extract SIFT10M from SIFT1B (auto-downloads SIFT1B if needed)
-cd sift-10m && make all
+# Basic usage
+python3 compute_groundtruth.py base.fvecs query.fvecs groundtruth.ivecs --k 100
 
-# Extract SIFT100M from SIFT1B (auto-downloads SIFT1B if needed)
-cd sift-100m && make all
-
-# Extract Deep1M/10M/100M from Deep1B (auto-downloads Deep1B if needed)
-cd deep-1m && make all
-cd deep-10m && make all
-cd deep-100m && make all
+# Control memory via chunk size (default: 2M vectors per chunk)
+python3 compute_groundtruth.py deep10m_base.fvecs deep10m_query.fvecs gt.ivecs --chunk-size 1000000
 ```
 
-**Note**: SIFT10M and SIFT100M will automatically download and setup SIFT1B if it's not already present. Deep1M, Deep10M, and Deep100M similarly depend on Deep1B. The extraction process reuses the source files without duplicating the large dataset.
+Requires `faiss-cpu`: `pip install faiss-cpu`
 
-The `extract_subset.py` tool can also be used directly:
+### extract_query.py — Random Query Extraction
+
+Randomly samples query vectors from a base file, removes them from the base set, and optionally computes ground truth — all in one step.
+
+```bash
+# Extract 1000 random queries (seed=42), write compacted base and query files
+python3 extract_query.py input_base.fvecs base_out.fvecs query_out.fvecs --num-queries 1000 --seed 42
+
+# Also compute ground truth in the same step
+python3 extract_query.py input_base.fvecs base_out.fvecs query_out.fvecs --gt gt_out.ivecs --k 100
+```
+
+The extraction guarantees:
+- **Random sampling**: `np.random.default_rng(seed).choice(n, nq, replace=False)`
+- **No overlap**: Sampled query vectors are removed from the output base file
+- **Reproducible**: Fixed seed (default 42) ensures identical splits across runs
+- **Memory-efficient**: Uses memmap + chunked writing for large files
+
+### extract_subset.py — Subset Extraction
+
+Extracts the first N vectors from a large vector file using memory-mapped I/O.
 
 ```bash
 python3 extract_subset.py bigann_base.bvecs sift10m_base.bvecs 10000000
 ```
 
-### Dataset Dependencies
+### fbin_to_fvecs.py — Format Conversion
 
-- **sift-10m** and **sift-100m** automatically initialize **big-ann** if needed
-- **deep-1m**, **deep-10m**, and **deep-100m** automatically initialize **deep-1b** if needed
+Converts BigANN `.fbin` format to `.fvecs` using memory-mapped chunked I/O (safe for billion-scale files).
 
-## How to Add a New Dataset
+```bash
+python3 fbin_to_fvecs.py base.1B.fbin deep1B_base.fvecs
+```
 
-1.  Create a new subdirectory in the root folder, e.g., `my-dataset`.
-2.  Create a `Makefile` inside `my-dataset/`.
-3.  Following the existing examples, define the dataset variables (`DATASET_NAME`, `ARCHIVE_FILE`, `URL`) and include the appropriate `recipe-*.mk` file from the root directory. Lastly, define the `all` target to trigger the `setup` process.
+### vec_to_fvecs.py — Text to Binary Conversion
+
+Converts fastText `.vec` text format to `.fvecs` binary format with streaming chunked output.
+
+```bash
+python3 vec_to_fvecs.py crawl-300d-2M.vec crawl_base.fvecs
+```
+
+### hdf5_to_fvecs.py — HDF5 Conversion
+
+Converts ann-benchmarks.com HDF5 format to fvecs/ivecs.
+
+```bash
+python3 hdf5_to_fvecs.py glove-100-angular.hdf5 glove100
+```
+
+### preview_dataset.py — Dataset Inspector
+
+```bash
+python3 preview_dataset.py sift_base.fvecs
+python3 preview_dataset.py sift_base.fvecs --preview 5  # Preview first 5 vectors
+```
+
+### verify_datasets.py — Dataset Integrity Checker
+
+Auto-discovers all downloaded datasets and verifies file existence, format integrity, dimension consistency, and ground truth validity. Requires `rich` for table output.
+
+```bash
+# Basic verification (file checks only)
+python3 verify_datasets.py
+
+# Also brute-force verify ground truth correctness on sampled queries
+python3 verify_datasets.py --verify-gt --gt-samples 20
+```
+
+Checks performed:
+- **File existence**: base, query, and ground truth files present
+- **Format integrity**: valid fvecs/bvecs/ivecs format, no truncation
+- **Dimension consistency**: base dim == query dim
+- **GT validity**: row count matches query count, IDs within base range
+- **GT correctness** (with `--verify-gt`): brute-force k-NN on sampled queries matches stored GT
+
+Requires `pip install rich` and optionally `pip install faiss-cpu` for `--verify-gt`.
 
 ## Vector File Formats
 
-This repository supports three vector file formats from the Texmex corpus:
+This repository uses three vector file formats from the Texmex corpus:
 
 - **fvecs**: Float32 vectors (4 bytes per element)
 - **bvecs**: Uint8 vectors (1 byte per element)
 - **ivecs**: Int32 vectors (4 bytes per element)
 
 Each vector is stored with a 4-byte dimension header followed by the vector data.
-

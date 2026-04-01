@@ -9,7 +9,7 @@ BASE_URL := https://storage.yandexcloud.net/yandex-research/ann-datasets/DEEP
 BASE_FBIN      := base.1B.fbin
 QUERY_FBIN     := query.public.10K.fbin
 LEARN_FBIN     := learn.350M.fbin
-GT_BIN         := ../deep_new_groundtruth.public.10K.bin
+GT_BIN         := deep_new_groundtruth.public.10K.bin
 GT_BIN_URL     := https://storage.yandexcloud.net/yandex-research/ann-datasets/deep_new_groundtruth.public.10K.bin
 
 # Final output files (.fvecs/.ivecs format)

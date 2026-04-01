@@ -12,7 +12,8 @@ EXTRACT_DIR    := audio
 # Expected files after extraction (inside audio/ subdirectory)
 BASE_FILE      := audio_base.fvecs
 QUERY_FILE     := audio_query.fvecs
-FINAL_FILES    := $(BASE_FILE) $(QUERY_FILE)
+TRUTH_FILE     := audio_groundtruth.ivecs
+FINAL_FILES    := $(BASE_FILE) $(QUERY_FILE) $(TRUTH_FILE)
 # --- End of Configuration ---
 
 all: setup
@@ -30,7 +31,7 @@ $(ARCHIVE_FILE):
 	fi
 
 # Extract
-$(FINAL_FILES): $(ARCHIVE_FILE)
+$(BASE_FILE) $(QUERY_FILE): $(ARCHIVE_FILE)
 	@if [ ! -f "$(firstword $(FINAL_FILES))" ]; then \
 		echo "-> Extracting files from $(ARCHIVE_FILE)..."; \
 		tar --warning=no-alone-zero-block -xzf $(ARCHIVE_FILE); \
@@ -49,6 +50,11 @@ $(FINAL_FILES): $(ARCHIVE_FILE)
 	else \
 		echo "-> Files already extracted, skipping."; \
 	fi
+
+# Compute ground truth
+$(TRUTH_FILE): $(BASE_FILE) $(QUERY_FILE)
+	@echo "-> Computing ground truth (k=100)..."
+	python3 ../compute_groundtruth.py $(BASE_FILE) $(QUERY_FILE) $(TRUTH_FILE) --k 100
 
 # Download only
 fetch: $(ARCHIVE_FILE)

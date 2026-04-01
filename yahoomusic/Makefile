@@ -2,7 +2,7 @@
 # ~1.8M vectors, 300 dimensions, Euclidean distance
 # Source: CUHK GQR benchmark suite
 # Note: Archive contains a single file (yahoomusic_query_all.fvecs) with all
-#       vectors. We split the last 1000 as query and the rest as base.
+#       vectors. We randomly extract 1000 as query and remove them from base.
 
 DATASET_NAME   := yahoomusic
 ARCHIVE_FILE   := yahoomusic.tar.gz
@@ -30,18 +30,10 @@ $(ALL_FILE): $(ARCHIVE_FILE)
 	mv $(EXTRACT_DIR)/$(ALL_FILE) .
 	rm -rf $(EXTRACT_DIR)
 
-$(BASE_FILE) $(QUERY_FILE): $(ALL_FILE)
-	@echo "-> Splitting into base and query (last $(NUM_QUERIES) as query)..."
-	python3 -c "\
-import sys; sys.path.insert(0, '..');\
-from vecs_io import fvecs_mmap, fvecs_write;\
-import numpy as np;\
-data = fvecs_mmap('$(ALL_FILE)');\
-n = data.shape[0];\
-nq = $(NUM_QUERIES);\
-fvecs_write('$(BASE_FILE)', np.array(data[:n-nq]));\
-fvecs_write('$(QUERY_FILE)', np.array(data[n-nq:]));\
-print(f'  Base: {n-nq} vectors, Query: {nq} vectors')"
+$(BASE_FILE) $(QUERY_FILE) &: $(ALL_FILE)
+	@echo "-> Extracting $(NUM_QUERIES) random query vectors from base..."
+	python3 ../extract_query.py $(ALL_FILE) $(BASE_FILE) $(QUERY_FILE) \
+		--num-queries $(NUM_QUERIES) --seed 42
 
 $(TRUTH_FILE): $(BASE_FILE) $(QUERY_FILE)
 	@echo "-> Computing ground truth..."
