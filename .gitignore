@@ -10,4 +10,5 @@
 *.hdf5
 *.h5
 *.vec
+*.txt
 __pycache__/
