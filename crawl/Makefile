@@ -13,7 +13,7 @@ BASE_FILE      := crawl_base.fvecs
 QUERY_FILE     := crawl_query.fvecs
 TRUTH_FILE     := crawl_groundtruth.ivecs
 ORIG_BASE_FILE := crawl_base_orig.fvecs
-NUM_QUERIES    := 1000
+NUM_QUERIES    := 10000
 FINAL_FILES    := $(BASE_FILE) $(QUERY_FILE) $(TRUTH_FILE)
 # --- End of Configuration ---
 

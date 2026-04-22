@@ -6,7 +6,7 @@ DATASET_NAME   := glove-100d
 ARCHIVE_FILE   := glove.2024.wikigiga.100d.zip
 URL            := https://nlp.stanford.edu/data/wordvecs/glove.2024.wikigiga.100d.zip
 TXT_FILE       := glove100d.txt
-NUM_QUERIES    := 1000
+NUM_QUERIES    := 10000
 
 ORIG_BASE_FILE := glove100d_base_orig.fvecs
 BASE_FILE      := glove100d_base.fvecs
