@@ -16,8 +16,7 @@
 *.txt
 __pycache__/
 
-# Large dataset directories — keep helper scripts tracked but never
-# commit the bulk data or precomputed ground-truth files.
-big-ann/gnd/
-spacev-10m/
-yandex-t2i-10m/
+# Bulk-data files inside dataset dirs are already filtered by the
+# extension patterns above. Add explicit entries for ground-truth
+# files that ship without an extension.
+msspacev-gt-10M
