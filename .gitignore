@@ -4,6 +4,9 @@
 *.tvecs
 *.fbin
 *.bin
+*.ibin
+*.u8bin
+*.i8bin
 *.tar.gz
 *.gz
 *.zip
@@ -12,3 +15,9 @@
 *.vec
 *.txt
 __pycache__/
+
+# Large dataset directories — keep helper scripts tracked but never
+# commit the bulk data or precomputed ground-truth files.
+big-ann/gnd/
+spacev-10m/
+yandex-t2i-10m/

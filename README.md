@@ -42,6 +42,8 @@ make clean-all  # Remove everything including archives
 | `ukbench` | UKBench | 128 | ~1.1M | 200 | Archive | Image |
 | `yahoomusic` | Yahoo Music | 300 | ~1.8M | 1K | **Generated** | Latent |
 | `tiny5m` | Tiny-5M | 384 | 5M | 1K | Archive | Image |
+| `yandex-t2i-10m` | Yandex T2I-10M | 200 | 10M | 10K | Archive (truncated) | Cross-modal (image base, text query, **inner product**) |
+| `spacev-10m` | Microsoft SpaceV-10M | 100 | 10M | 29,316 | Archive (in-distribution) | Web-search (int8 → float32, L2, **Standard Track**) |
 
 **Query Source** column:
 - **Archive**: Query vectors are provided in the original download archive by the dataset publisher.
