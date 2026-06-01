@@ -14,36 +14,24 @@ Usage:
 import argparse
 import os
 import numpy as np
-
-CHUNK_SIZE = 1_000_000  # vectors per chunk
+from vecs_io import fvecs_write_chunked
 
 
 def fbin_to_fvecs(input_file, output_file, limit=None):
-    # Read header (8 bytes)
+    # Read header (8 bytes), then memory-map the data region past it.
     header = np.fromfile(input_file, dtype="uint32", count=2)
     nrows, ncols = int(header[0]), int(header[1])
-    print(f"Input: {input_file}: {nrows:,} vectors x {ncols} dims")
+    print(f"Input: {input_file}: {nrows:,} vectors x {ncols} dims (float32)")
 
-    # Memory-map the data region (skip 8-byte header)
     data = np.memmap(input_file, dtype="float32", mode="r",
                      offset=8, shape=(nrows, ncols))
 
     if limit is not None and limit < nrows:
         print(f"Limit set: emitting first {limit:,} of {nrows:,} vectors")
-        nrows = limit
+        data = data[:limit]
 
-    print(f"Writing {output_file} in chunks of {CHUNK_SIZE:,}...")
-    with open(output_file, "wb") as fout:
-        for start in range(0, nrows, CHUNK_SIZE):
-            end = min(start + CHUNK_SIZE, nrows)
-            chunk = np.ascontiguousarray(data[start:end])
-            n, d = chunk.shape
-            # Build fvecs block: prepend int32 dim to each row
-            block = np.empty((n, d + 1), dtype="float32")
-            block[:, 0] = np.array([d], dtype="int32").view("float32")
-            block[:, 1:] = chunk
-            block.tofile(fout)
-            print(f"  {end:,} / {nrows:,}")
+    print(f"Writing {output_file} in chunks...")
+    fvecs_write_chunked(output_file, data)
 
     print(f"Done. Output: {output_file} ({os.path.getsize(output_file) / 1e9:.2f} GB)")
 

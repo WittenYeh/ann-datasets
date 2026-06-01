@@ -69,6 +69,30 @@ def fvecs_write(fname, m):
     ivecs_write(fname, m.view("int32"))
 
 
+def fvecs_write_chunked(fname, data, chunk_size=1_000_000, progress=True):
+    """Stream an (n, d) array to fvecs, widening to float32, in row chunks.
+
+    Bounded-RAM counterpart to fvecs_write: `data` may be a numpy memmap, so
+    billion-scale sources never fully materialise. Any numeric input dtype is
+    cast to float32 (lossless for the uint8/int8 ANN corpora). Shared by the
+    fbin / i8bin / bvecs -> fvecs converters, which differ only in how they
+    open the source view; pre-slice `data` to apply a row limit.
+    """
+    nrows = data.shape[0]
+    with open(fname, "wb") as fout:
+        for start in range(0, nrows, chunk_size):
+            end = min(start + chunk_size, nrows)
+            chunk = np.ascontiguousarray(data[start:end], dtype="float32")
+            n, d = chunk.shape
+            # fvecs row layout: [int32 dim][float32 x dim]
+            block = np.empty((n, d + 1), dtype="float32")
+            block[:, 0] = np.array([d], dtype="int32").view("float32")
+            block[:, 1:] = chunk
+            block.tofile(fout)
+            if progress:
+                print(f"  {end:,} / {nrows:,}")
+
+
 def bvecs_write(fname, m):
     """Write an (n, d) uint8 array in bvecs format."""
     m = np.asarray(m, dtype="uint8")

@@ -22,8 +22,7 @@ Usage:
 import argparse
 import os
 import numpy as np
-
-CHUNK_SIZE = 1_000_000  # vectors per chunk
+from vecs_io import fvecs_write_chunked
 
 
 def i8bin_to_fvecs(input_file, output_file, limit=None):
@@ -35,23 +34,14 @@ def i8bin_to_fvecs(input_file, output_file, limit=None):
         print(f"Limit set: emitting first {limit:,} of {nrows:,} vectors")
         nrows = limit
 
-    # Memory-map the int8 region (offset past the 8-byte header).
+    # Memory-map only as many rows as exist on disk (offset past the 8-byte
+    # header). Clamping BEFORE the mmap is deliberate: partial byte-range
+    # downloads (e.g. the first 10M of a 1B base) keep the original 1B header.
     data = np.memmap(input_file, dtype="int8", mode="r",
                      offset=8, shape=(nrows, ncols))
 
-    print(f"Writing {output_file} in chunks of {CHUNK_SIZE:,}...")
-    with open(output_file, "wb") as fout:
-        for start in range(0, nrows, CHUNK_SIZE):
-            end = min(start + CHUNK_SIZE, nrows)
-            chunk_i8 = np.ascontiguousarray(data[start:end])
-            n, d = chunk_i8.shape
-            chunk_f32 = chunk_i8.astype("float32")
-            # fvecs row layout: [int32 dim][float32 × dim]
-            block = np.empty((n, d + 1), dtype="float32")
-            block[:, 0] = np.array([d], dtype="int32").view("float32")
-            block[:, 1:] = chunk_f32
-            block.tofile(fout)
-            print(f"  {end:,} / {nrows:,}")
+    print(f"Writing {output_file} in chunks...")
+    fvecs_write_chunked(output_file, data)
 
     print(f"Done. Output: {output_file} ({os.path.getsize(output_file) / 1e9:.2f} GB)")
 

@@ -1,9 +1,9 @@
-# Makefile for SIFT100M dataset (subset of SIFT1B/big-ann)
+# Makefile for SIFT100M dataset (subset of SIFT1B/bigann)
 
 DATASET_NAME := sift-100m
 NUM_VECTORS  := 100000000
 
-SIFT1B_DIR     := ../big-ann
+SIFT1B_DIR     := ../bigann
 SOURCE_BASE    := $(SIFT1B_DIR)/bigann_base.bvecs
 SOURCE_QUERY   := $(SIFT1B_DIR)/bigann_query.bvecs
 SOURCE_LEARN   := $(SIFT1B_DIR)/bigann_learn.bvecs
@@ -18,7 +18,7 @@ all: setup
 .PHONY: all
 
 $(SOURCE_BASE) $(SOURCE_QUERY) $(SOURCE_LEARN):
-	@echo "-> SIFT1B source not found, building big-ann first..."
+	@echo "-> SIFT1B source not found, building bigann first..."
 	$(MAKE) -C $(SIFT1B_DIR) setup
 
 setup: $(FINAL_FILES)
