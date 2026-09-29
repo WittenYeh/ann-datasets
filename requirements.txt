@@ -1,4 +1,6 @@
 numpy
+numba
+polars>=1.0
 rich
 faiss-cpu
 h5py

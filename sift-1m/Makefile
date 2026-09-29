@@ -4,6 +4,7 @@
 # All other variables (like filenames and extraction directory)
 # are derived automatically by the included recipes.
 DATASET_NAME   := sift-1m
+DEDUPLICATE_BASE := 1
 ARCHIVE_FILE   := sift.tar.gz
 URL            := ftp://ftp.irisa.fr/local/texmex/corpus/sift.tar.gz
 # --- End of Configuration ---

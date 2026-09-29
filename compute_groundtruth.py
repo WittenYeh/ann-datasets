@@ -15,6 +15,7 @@ Example:
 import argparse
 import sys
 import os
+import tempfile
 import numpy as np
 from vecs_io import fvecs_mmap, fvecs_read, bvecs_mmap, bvecs_read, ivecs_write
 
@@ -64,6 +65,8 @@ def _search_chunked(xb_mmap, xq, k, chunk_size, is_bvecs=False):
 
 
 def compute_groundtruth(base_file, query_file, output_file, k, chunk_size):
+    if k <= 0 or chunk_size <= 0:
+        raise ValueError("k and chunk_size must be positive")
     try:
         import faiss
     except ImportError:
@@ -78,6 +81,10 @@ def compute_groundtruth(base_file, query_file, output_file, k, chunk_size):
     is_bvecs = base_ext == "bvecs"
     xb_mmap = bvecs_mmap(base_file) if is_bvecs else fvecs_mmap(base_file)
     nb, d = xb_mmap.shape
+    if k > nb:
+        raise ValueError(f"k={k} exceeds base vector count {nb}")
+    if nb > np.iinfo(np.int32).max:
+        raise ValueError("Base vector count exceeds signed 32-bit ivecs IDs")
     print(f"  Base: {nb:,} vectors, {d} dimensions")
 
     # Fully read query vectors (always small)
@@ -88,7 +95,8 @@ def compute_groundtruth(base_file, query_file, output_file, k, chunk_size):
         xq = fvecs_read(query_file)
     nq, dq = xq.shape
     print(f"  Query: {nq:,} vectors, {dq} dimensions")
-    assert d == dq, f"Dimension mismatch: base={d}, query={dq}"
+    if d != dq:
+        raise ValueError(f"Dimension mismatch: base={d}, query={dq}")
 
     # Decide whether to use chunked search
     if nb <= chunk_size:
@@ -103,7 +111,16 @@ def compute_groundtruth(base_file, query_file, output_file, k, chunk_size):
         I = _search_chunked(xb_mmap, xq, k, chunk_size, is_bvecs)
 
     print(f"Writing ground truth to {output_file}...")
-    ivecs_write(output_file, I.astype("int32"))
+    # Publish only complete files; interrupted recomputations preserve old GT.
+    fd, temporary = tempfile.mkstemp(prefix=os.path.basename(output_file) + ".",
+                                     suffix=".tmp", dir=os.path.dirname(os.path.abspath(output_file)))
+    os.close(fd)
+    try:
+        ivecs_write(temporary, I.astype("int32"))
+        os.replace(temporary, output_file)
+    finally:
+        if os.path.exists(temporary):
+            os.unlink(temporary)
 
     output_size = os.path.getsize(output_file)
     print(f"Done. {nq:,} queries x {k} neighbors = {output_size / 1024 / 1024:.1f} MB")

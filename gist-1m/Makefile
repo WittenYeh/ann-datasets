@@ -2,6 +2,7 @@
 
 # --- 1. Dataset-Specific Configuration ---
 DATASET_NAME   := gist-1m
+DEDUPLICATE_BASE := 1
 ARCHIVE_FILE   := gist.tar.gz
 URL            := ftp://ftp.irisa.fr/local/texmex/corpus/gist.tar.gz
 # --- End of Configuration ---

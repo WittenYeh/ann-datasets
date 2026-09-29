@@ -26,6 +26,22 @@ setup: $(FINAL_FILES)
 	@echo "-> Dataset setup complete!"
 
 # Generic rule to create final files from the archive with auto-extraction.
+ifeq ($(DEDUPLICATE_BASE),1)
+RAW_BASE_FILE := $(ARCHIVE_PREFIX)_base.raw.fvecs
+
+# Select only vectors from the archive. Publisher GT refers to the original IDs.
+$(RAW_BASE_FILE) $(QUERY_FILE) $(LEARN_FILE) &: $(ARCHIVE_FILE)
+	@set -eu; stage=$$(mktemp -d .extract.XXXXXX); \
+	trap 'rm -rf "$$stage"' EXIT HUP INT TERM; \
+	tar --warning=no-alone-zero-block -xzf $(ARCHIVE_FILE) -C "$$stage" \
+		$(EXTRACT_DIR)/$(BASE_FILE) $(EXTRACT_DIR)/$(QUERY_FILE) $(EXTRACT_DIR)/$(LEARN_FILE); \
+	mv "$$stage/$(EXTRACT_DIR)/$(BASE_FILE)" $(RAW_BASE_FILE); \
+	mv "$$stage/$(EXTRACT_DIR)/$(QUERY_FILE)" $(QUERY_FILE); \
+	mv "$$stage/$(EXTRACT_DIR)/$(LEARN_FILE)" $(LEARN_FILE); \
+	touch $(RAW_BASE_FILE) $(QUERY_FILE) $(LEARN_FILE)
+
+include ../deduplicate.mk
+else
 $(FINAL_FILES): $(ARCHIVE_FILE)
 	@# This 'if' block ensures the extraction command runs only once.
 	@if [ ! -f "$(firstword $(FINAL_FILES))" ]; then \
@@ -44,6 +60,7 @@ $(FINAL_FILES): $(ARCHIVE_FILE)
 	else \
 		echo "-> Files already extracted, skipping extraction."; \
 	fi
+endif
 
 # Inspect dataset information
 info:

@@ -15,6 +15,9 @@
 *.vec
 *.txt
 __pycache__/
+.cache/
+*.dedup.json
+*.ivecs.config
 
 # Bulk-data files inside dataset dirs are already filtered by the
 # extension patterns above. Add explicit entries for ground-truth

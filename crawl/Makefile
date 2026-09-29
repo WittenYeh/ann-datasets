@@ -10,6 +10,7 @@ VEC_FILE       := crawl-300d-2M.vec
 URL            := https://dl.fbaipublicfiles.com/fasttext/vectors-english/crawl-300d-2M.vec.zip
 
 BASE_FILE      := crawl_base.fvecs
+RAW_BASE_FILE  := crawl_base.raw.fvecs
 QUERY_FILE     := crawl_query.fvecs
 TRUTH_FILE     := crawl_groundtruth.ivecs
 ORIG_BASE_FILE := crawl_base_orig.fvecs
@@ -50,15 +51,13 @@ $(ORIG_BASE_FILE): $(VEC_FILE)
 	fi
 
 # Extract query vectors and compact base (removes query vectors from base)
-$(BASE_FILE) $(QUERY_FILE) &: $(ORIG_BASE_FILE)
+$(RAW_BASE_FILE) $(QUERY_FILE) &: $(ORIG_BASE_FILE)
 	@echo "-> Extracting $(NUM_QUERIES) random query vectors from base..."
-	python3 ../extract_query.py $(ORIG_BASE_FILE) $(BASE_FILE) $(QUERY_FILE) \
+	python3 ../extract_query.py $(ORIG_BASE_FILE) $(RAW_BASE_FILE) $(QUERY_FILE) \
 		--num-queries $(NUM_QUERIES) --seed 42
 
 # Compute ground truth
-$(TRUTH_FILE): $(BASE_FILE) $(QUERY_FILE)
-	@echo "-> Computing ground truth (k=100)..."
-	python3 ../compute_groundtruth.py $(BASE_FILE) $(QUERY_FILE) $(TRUTH_FILE) --k 100
+include ../deduplicate.mk
 
 # Download only
 fetch: $(ARCHIVE_FILE)

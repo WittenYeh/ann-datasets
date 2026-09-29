@@ -12,6 +12,7 @@ NUM_QUERIES    := 1000
 
 ALL_FILE       := yahoomusic_query_all.fvecs
 BASE_FILE      := yahoomusic_base.fvecs
+RAW_BASE_FILE  := yahoomusic_base.raw.fvecs
 QUERY_FILE     := yahoomusic_query.fvecs
 TRUTH_FILE     := yahoomusic_groundtruth.ivecs
 FINAL_FILES    := $(BASE_FILE) $(QUERY_FILE) $(TRUTH_FILE)
@@ -26,18 +27,18 @@ setup: $(FINAL_FILES)
 
 $(ALL_FILE): $(ARCHIVE_FILE)
 	@echo "-> Extracting $(ARCHIVE_FILE)..."
-	tar --warning=no-alone-zero-block -xzf $(ARCHIVE_FILE)
-	mv $(EXTRACT_DIR)/$(ALL_FILE) .
-	rm -rf $(EXTRACT_DIR)
+	@set -eu; stage=$$(mktemp -d .extract.XXXXXX); \
+	trap 'rm -rf "$$stage"' EXIT HUP INT TERM; \
+	tar --warning=no-alone-zero-block -xzf $(ARCHIVE_FILE) -C "$$stage" $(EXTRACT_DIR)/$(ALL_FILE); \
+	mv "$$stage/$(EXTRACT_DIR)/$(ALL_FILE)" $(ALL_FILE); \
+	touch $(ALL_FILE)
 
-$(BASE_FILE) $(QUERY_FILE) &: $(ALL_FILE)
+$(RAW_BASE_FILE) $(QUERY_FILE) &: $(ALL_FILE)
 	@echo "-> Extracting $(NUM_QUERIES) random query vectors from base..."
-	python3 ../extract_query.py $(ALL_FILE) $(BASE_FILE) $(QUERY_FILE) \
+	python3 ../extract_query.py $(ALL_FILE) $(RAW_BASE_FILE) $(QUERY_FILE) \
 		--num-queries $(NUM_QUERIES) --seed 42
 
-$(TRUTH_FILE): $(BASE_FILE) $(QUERY_FILE)
-	@echo "-> Computing ground truth..."
-	python3 ../compute_groundtruth.py $(BASE_FILE) $(QUERY_FILE) $(TRUTH_FILE) --k 100
+include ../deduplicate.mk
 
 clean:
 	rm -f $(FINAL_FILES) $(ALL_FILE)

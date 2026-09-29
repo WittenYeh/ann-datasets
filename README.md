@@ -11,7 +11,7 @@
 **Easy-to-use ANN benchmark datasets with a single MAKE command.**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Python 3.6+](https://img.shields.io/badge/python-3.6+-blue.svg)](https://www.python.org/downloads/)
+[![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 
 ## Quick Start
 
@@ -28,6 +28,45 @@ make clean      # Remove extracted files
 make clean-all  # Remove everything including archives
 ```
 
+### Deduplicated benchmark datasets
+
+For **SIFT-1M, GIST-1M, Crawl, GloVe-100d, YahooMusic, Tiny-5M, DEEP-10M,
+and SpaceV-10M**, `make all` performs this pipeline:
+
+1. Download/convert the original base and the publisher's queries, when provided.
+   Crawl, GloVe-100d and YahooMusic instead keep the existing seed-42 query split
+   (10,000, 10,000 and 1,000 queries, respectively), before deduplication.
+2. Keep the original benchmark base in `*_base.raw.fvecs`. Deduplicate it into
+   the usual `*_base.fvecs` filename, keeping the first occurrence in input order.
+3. Compute our own **top-1000 exact L2 neighbors** against the deduplicated base.
+   Official ground truth is neither converted nor used. Archives that bundle GT
+   with vectors are downloaded as usual, but their GT is not extracted.
+
+Install NumPy, Polars, Numba and `faiss-cpu` into the Python environment used by Make:
+`python3 -m pip install numpy 'polars>=1.0' numba faiss-cpu`. This pipeline also
+requires Linux, GNU Make 4.3+ and `numactl`.
+Make configures the Polars, Numba and OpenMP thread pools using `nproc`, with
+`numactl --interleave=all` from process startup.
+
+```bash
+make -C sift-1m all                        # deduplicate + fresh top-1000 GT
+make -C sift-1m deduplicate                # only prepare the deduplicated base
+make -C sift-1m groundtruth GT_K=1000       # compute GT if stale or missing
+make -C sift-1m all GT_K=100 GT_CHUNK_SIZE=1000000
+```
+
+An unchanged `make all` reuses both outputs. Changing `GT_K` or `GT_CHUNK_SIZE`
+rebuilds GT. Each base also has a `*.dedup.json` report with counts and timings.
+`make clean` removes generated files, including the raw base and reports;
+`make clean-all` additionally removes downloaded sources.
+
+**IDs are row numbers in the new base.** After deduplication, rebuild indexes
+and use the newly computed GT together with that base. Dataset names retain
+their nominal sizes, while the actual row count can shrink. Query contents are
+preserved; learn/training vectors are not deduplicated. Distinct vectors can
+still be at the same distance from a query: removing identical base vectors
+does not eliminate all distance ties.
+
 ## Supported Datasets
 
 | Directory | Dataset | Dim | # Base | # Query | Query Source | Type |
@@ -35,9 +74,10 @@ make clean-all  # Remove everything including archives
 | `sift-1m` | SIFT-1M | 128 | 1M | 10K | Archive | Image |
 | `gist-1m` | GIST-1M | 960 | 1M | 1K | Archive | Image |
 | `deep-10m` | Deep-10M | 96 | 10M | 10K | Parent (Deep1B) | Image |
-| `crawl` | Crawl | 300 | ~2M | 1K | **Generated** | Text |
+| `crawl` | Crawl | 300 | ~2M | 10K | **Generated** | Text |
 | `msong` | MSONG | 420 | ~992K | 200 | Archive | Audio |
 | `glove` | GloVe | 100 | ~1.2M | 1K | Archive | Text |
+| `glove-100d` | GloVe 2024 | 100 | ~1.28M | 10K | **Generated** | Text |
 | `imagenet` | ImageNet | 150 | ~2.3M | 200 | Archive | Image |
 | `ukbench` | UKBench | 128 | ~1.1M | 200 | Archive | Image |
 | `yahoomusic` | Yahoo Music | 300 | ~1.8M | 1K | **Generated** | Latent |
@@ -51,6 +91,67 @@ make clean-all  # Remove everything including archives
 - **Generated**: No query vectors in the original archive. We randomly sample vectors from the base set as queries and remove them from the base to ensure no overlap.
 
 ## Utility Scripts
+
+### deduplicate.py — Stable Exact Vector Deduplication
+
+```bash
+OMP_NUM_THREADS=$(nproc) NUMBA_NUM_THREADS=$(nproc) POLARS_MAX_THREADS=$(nproc) \
+    numactl --interleave=all python3 deduplicate.py \
+    sift-1m/sift_base.raw.fvecs sift-1m/sift_base.fvecs \
+    --threads "$(nproc)" --report sift-1m/sift_base.fvecs.dedup.json
+```
+
+The script memory-maps the input and validates dimension headers and finite
+coordinates in bounded NumPy chunks. Polars treats each complete vector as an
+`Array` element and returns first-occurrence IDs:
+
+```python
+ids = pl.Series("vector", vectors).arg_unique().to_numpy()
+ids = np.sort(ids)
+```
+
+Numba copies those original records in parallel into a temporary output mapping.
+After flushing that mapping, an atomic rename publishes the completed file.
+`--threads` controls output-copy workers. Polars uses its process-wide pool,
+configured with `POLARS_MAX_THREADS` before launch; individual operations may
+use fewer workers. Numba compiles and caches only the output-copy kernel.
+
+The JSON report records `backend: "polars"`, `threads` (copy workers),
+`polars_threads`, `validation_seconds` and `deduplicate_seconds`. The old
+`hash_seconds`, `compare_seconds` and `hash_algorithm` fields are removed.
+`copy_seconds` and `flush_seconds` are separate; `write_seconds` includes both,
+file setup and publication. Copy timings include JIT compilation/cache loading
+when it occurs; flushing depends on filesystem throughput.
+
+Both `fvecs` and `bvecs` are supported. Float equality is exact, without any
+distance calculation or tolerance; `+0.0` and `-0.0` compare equal. The first
+occurrence's bytes are preserved. Non-finite floats, inconsistent dimension
+headers, truncated records and empty inputs are rejected. The input mapping
+is backed by the file. Polars may copy coordinates and allocate temporary arrays,
+so allow O(number of vectors x dimensions) additional memory. The output is a
+separate file, so allow disk space for both the raw and deduplicated base.
+The utility requires `numpy`, `polars>=1.0` and `numba`;
+`faiss-cpu` is needed by the subsequent ground-truth computation.
+
+Run correctness and Make integration tests (including all eight pipelines):
+
+```bash
+python3 -m pip install -r requirements.txt
+OMP_NUM_THREADS=$(nproc) NUMBA_NUM_THREADS=$(nproc) POLARS_MAX_THREADS=$(nproc) numactl --interleave=all \
+    python3 -m unittest discover -s tests -v
+```
+
+FAISS is required for the complete suite: a missing installation fails the
+tests instead of silently skipping GT/Make checks. The suite compares complete
+deduplicated files against an independent first-occurrence reference, including
+byte preservation, output order, signed zeros and float32 edge cases. All eight
+Make pipelines run on small local fixtures, including Crawl/GloVe text conversion
+and query extraction. GT checks use independent float64 exhaustive distances,
+require distinct valid IDs and sorted nearest-neighbor ranks, and cover top-1000,
+equal-distance boundaries and chunks smaller than k. Injected write/publication
+failures check that previous data and GT files survive and temporary files are
+removed. These are correctness checks, not large-dataset performance or crash/
+power-loss durability tests.
 
 ### vecs_io.py — Shared I/O Module
 

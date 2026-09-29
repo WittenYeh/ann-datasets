@@ -9,6 +9,7 @@ SOURCE_QUERY   := $(DEEP1B_DIR)/deep1B_queries.fvecs
 SOURCE_LEARN   := $(DEEP1B_DIR)/deep1B_learn.fvecs
 
 BASE_FILE      := deep10m_base.fvecs
+RAW_BASE_FILE  := deep10m_base.raw.fvecs
 QUERY_FILE     := deep10m_query.fvecs
 LEARN_FILE     := deep10m_learn.fvecs
 TRUTH_FILE     := deep10m_groundtruth.ivecs
@@ -19,14 +20,14 @@ all: setup
 
 $(SOURCE_BASE) $(SOURCE_QUERY) $(SOURCE_LEARN):
 	@echo "-> Deep1B source not found, building deep-1b first..."
-	$(MAKE) -C $(DEEP1B_DIR) setup
+	$(MAKE) -C $(DEEP1B_DIR) $(notdir $@)
 
 setup: $(FINAL_FILES)
 	@echo "-> $(DATASET_NAME) dataset setup complete!"
 
-$(BASE_FILE): $(SOURCE_BASE)
+$(RAW_BASE_FILE): $(SOURCE_BASE)
 	@echo "-> Extracting $(NUM_VECTORS) base vectors..."
-	python3 ../extract_subset.py $(SOURCE_BASE) $(BASE_FILE) $(NUM_VECTORS)
+	python3 ../extract_subset.py $(SOURCE_BASE) $(RAW_BASE_FILE) $(NUM_VECTORS)
 
 $(QUERY_FILE): $(SOURCE_QUERY)
 	cp $(SOURCE_QUERY) $(QUERY_FILE)
@@ -34,9 +35,7 @@ $(QUERY_FILE): $(SOURCE_QUERY)
 $(LEARN_FILE): $(SOURCE_LEARN)
 	python3 ../extract_subset.py $(SOURCE_LEARN) $(LEARN_FILE) $(NUM_VECTORS)
 
-$(TRUTH_FILE): $(BASE_FILE) $(QUERY_FILE)
-	@echo "-> Computing ground truth for $(DATASET_NAME)..."
-	python3 ../compute_groundtruth.py $(BASE_FILE) $(QUERY_FILE) $(TRUTH_FILE) --k 100
+include ../deduplicate.mk
 
 clean:
 	rm -f $(FINAL_FILES)

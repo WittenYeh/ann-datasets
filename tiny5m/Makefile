@@ -8,6 +8,7 @@ URL            := https://www.cse.cuhk.edu.hk/systems/hash/gqr/dataset/tiny5m.ta
 EXTRACT_DIR    := tiny5m
 
 BASE_FILE      := tiny5m_base.fvecs
+RAW_BASE_FILE  := tiny5m_base.raw.fvecs
 QUERY_FILE     := tiny5m_query.fvecs
 TRUTH_FILE     := tiny5m_groundtruth.ivecs
 FINAL_FILES    := $(BASE_FILE) $(QUERY_FILE) $(TRUTH_FILE)
@@ -20,15 +21,17 @@ include ../common.mk
 setup: $(FINAL_FILES)
 	@echo "-> $(DATASET_NAME) dataset setup complete!"
 
-$(BASE_FILE) $(QUERY_FILE) &: $(ARCHIVE_FILE)
+$(RAW_BASE_FILE) $(QUERY_FILE) &: $(ARCHIVE_FILE)
 	@echo "-> Extracting $(ARCHIVE_FILE)..."
-	tar --warning=no-alone-zero-block -xzf $(ARCHIVE_FILE)
-	mv $(EXTRACT_DIR)/* .
-	rm -rf $(EXTRACT_DIR)
+	@set -eu; stage=$$(mktemp -d .extract.XXXXXX); \
+	trap 'rm -rf "$$stage"' EXIT HUP INT TERM; \
+	tar --warning=no-alone-zero-block -xzf $(ARCHIVE_FILE) -C "$$stage" \
+		$(EXTRACT_DIR)/$(BASE_FILE) $(EXTRACT_DIR)/$(QUERY_FILE); \
+	mv "$$stage/$(EXTRACT_DIR)/$(BASE_FILE)" $(RAW_BASE_FILE); \
+	mv "$$stage/$(EXTRACT_DIR)/$(QUERY_FILE)" $(QUERY_FILE); \
+	touch $(RAW_BASE_FILE) $(QUERY_FILE)
 
-$(TRUTH_FILE): $(BASE_FILE) $(QUERY_FILE)
-	@echo "-> Computing ground truth (5M vectors, this may take a while)..."
-	python3 ../compute_groundtruth.py $(BASE_FILE) $(QUERY_FILE) $(TRUTH_FILE) --k 100
+include ../deduplicate.mk
 
 clean:
 	rm -f $(FINAL_FILES)
