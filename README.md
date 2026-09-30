@@ -92,6 +92,44 @@ does not eliminate all distance ties.
 
 ## Utility Scripts
 
+### profile_pair_distance.py — GPU Pair-Distance Profile
+
+Requires NumPy and CUDA-enabled PyTorch. Scan the **complete base** to obtain
+the minimum and maximum Euclidean distances between distinct row IDs, and
+`delta = max_distance / min_distance`. Coordinates are not normalized or sampled.
+
+```bash
+python3 profile_pair_distance.py --base sift-1m/sift_base.fvecs \
+    --device cuda:0 --output /tmp/sift-pair-distance.json
+# With this repository inside artea-benchmark, resolve the base via its config:
+python3 profile_pair_distance.py --dataset deep-10m --device cuda:0 \
+    --matmul float32 --compile --output /tmp/deep-pair-distance.json
+```
+
+The default uses float64. Optional `--matmul float32` or `--matmul tf32` screens
+tiles with a conservative rounding-error bound, then recomputes possible
+extrema in float64. TF32 can be particularly useful for small integer datasets
+such as SIFT and SpaceV: the script checks when their dot products are exactly
+representable. Both reported pairs are also recomputed independently on the CPU.
+`--compile` fuses distance expansion and reductions; it requires PyTorch 2+,
+Triton and a working C/C++ compiler with Python development headers.
+
+This is exhaustive floating-point search, not approximate nearest-neighbor
+search or arbitrary-precision arithmetic. It takes O(N²D) work and
+O(ND + block_size²) GPU memory. Use `--block-size` to adjust temporary memory
+(default 8192); the full float32 vector array must also fit on the selected GPU.
+Float64 GEMM widens only the active tiles, keeping the resident data compact.
+
+JSON reports include distances and their squares, `min_pair_ids`, `max_pair_ids`
+(zero-based rows of the input file), `delta`, input shape, evaluated pair count,
+precision settings and elapsed time. A zero minimum does **not** end the scan.
+For a zero minimum, `delta` is `null` and `delta_status` is `infinite` when the
+maximum is positive, or `undefined` when all vectors coincide (0/0).
+
+```bash
+python3 -m unittest discover -s tests -p test_profile_pair_distance.py -v
+```
+
 ### deduplicate.py — Stable Exact Vector Deduplication
 
 ```bash
