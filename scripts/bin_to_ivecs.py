@@ -6,7 +6,7 @@ bin:   [uint32 nrows][uint32 ncols][int32 * nrows * ncols]
 ivecs: for each row: [int32 dim][int32 * dim]
 
 Usage:
-  python bin_to_ivecs.py input.bin output.ivecs
+  python scripts/bin_to_ivecs.py input.bin output.ivecs
 """
 
 import struct

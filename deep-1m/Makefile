@@ -34,7 +34,7 @@ setup: $(FINAL_FILES)
 # Extract subset (1M vectors) from deep-1b
 $(BASE_FILE): $(SOURCE_BASE)
 	@echo "-> Extracting $(NUM_VECTORS) base vectors from Deep1B..."
-	python3 ../extract_subset.py $(SOURCE_BASE) $(BASE_FILE) $(NUM_VECTORS)
+	python3 ../scripts/extract_subset.py $(SOURCE_BASE) $(BASE_FILE) $(NUM_VECTORS)
 
 $(QUERY_FILE): $(SOURCE_QUERY)
 	@echo "-> Copying query vectors..."
@@ -42,16 +42,16 @@ $(QUERY_FILE): $(SOURCE_QUERY)
 
 $(LEARN_FILE): $(SOURCE_LEARN)
 	@echo "-> Extracting $(NUM_VECTORS) learn vectors..."
-	python3 ../extract_subset.py $(SOURCE_LEARN) $(LEARN_FILE) $(NUM_VECTORS)
+	python3 ../scripts/extract_subset.py $(SOURCE_LEARN) $(LEARN_FILE) $(NUM_VECTORS)
 
 $(TRUTH_FILE): $(BASE_FILE) $(QUERY_FILE)
 	@echo "-> Computing ground truth for $(DATASET_NAME) subset..."
-	python3 ../compute_groundtruth.py $(BASE_FILE) $(QUERY_FILE) $(TRUTH_FILE) --k 100
+	python3 ../scripts/compute_groundtruth.py $(BASE_FILE) $(QUERY_FILE) $(TRUTH_FILE) --k 100
 
 info:
 	@echo "=== $(DATASET_NAME) Dataset Information ==="
 	@for file in $(FINAL_FILES); do \
-		if [ -f "$$file" ]; then python3 ../preview_dataset.py $$file; fi; \
+		if [ -f "$$file" ]; then python3 ../scripts/preview_dataset.py $$file; fi; \
 	done
 
 clean:

@@ -9,8 +9,8 @@ HDF5 datasets from ann-benchmarks.com typically contain:
   - 'distances': ground truth distances (float32)
 
 Usage:
-  python hdf5_to_fvecs.py <input.hdf5> <output_prefix>
-  python hdf5_to_fvecs.py glove-100-angular.hdf5 glove100
+  python scripts/hdf5_to_fvecs.py <input.hdf5> <output_prefix>
+  python scripts/hdf5_to_fvecs.py glove-100-angular.hdf5 glove100
 
 Output files:
   <prefix>_base.fvecs, <prefix>_query.fvecs, <prefix>_groundtruth.ivecs
@@ -79,7 +79,7 @@ def convert_hdf5(input_file, output_prefix, num_gt_neighbors=100):
 def main():
     parser = argparse.ArgumentParser(
         description="Convert HDF5 (ann-benchmarks format) to fvecs/ivecs",
-        epilog="Example: python hdf5_to_fvecs.py glove-100-angular.hdf5 glove100",
+        epilog="Example: python scripts/hdf5_to_fvecs.py glove-100-angular.hdf5 glove100",
     )
     parser.add_argument("input_file", help="Input HDF5 file")
     parser.add_argument("output_prefix", help="Output file prefix")

@@ -8,7 +8,7 @@ fvecs: for each row: [int32 dim][float32 * dim]
 Uses memory-mapped I/O + chunked writing to avoid OOM on billion-scale files.
 
 Usage:
-  python fbin_to_fvecs.py input.fbin output.fvecs [--limit N]
+  python scripts/fbin_to_fvecs.py input.fbin output.fvecs [--limit N]
 """
 
 import argparse

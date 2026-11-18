@@ -6,8 +6,8 @@ removes them from the base set, and writes the compacted base and query files.
 Optionally computes ground truth.
 
 Usage:
-    python extract_query.py input_base.fvecs base_out.fvecs query_out.fvecs [--num-queries 1000] [--seed 42]
-    python extract_query.py input_base.fvecs base_out.fvecs query_out.fvecs --gt gt_out.ivecs --k 100
+    python scripts/extract_query.py input_base.fvecs base_out.fvecs query_out.fvecs [--num-queries 1000] [--seed 42]
+    python scripts/extract_query.py input_base.fvecs base_out.fvecs query_out.fvecs --gt gt_out.ivecs --k 100
 """
 
 import argparse

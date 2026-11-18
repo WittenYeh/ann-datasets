@@ -42,9 +42,9 @@ except ImportError:                       # graceful no-op if tqdm isn't install
     def tqdm(it, **kwargs):
         return it
 
-# vecs_io lives in the ann-datasets root (the parent of this scripts/ dir).
+# vecs_io lives alongside this script.
 ANN_DATASET_DIR = Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(ANN_DATASET_DIR))
+sys.path.insert(0, str(ANN_DATASET_DIR / "scripts"))
 from vecs_io import read_by_ext, mmap_by_ext  # noqa: E402
 
 

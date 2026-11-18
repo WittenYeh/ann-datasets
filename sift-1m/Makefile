@@ -16,6 +16,6 @@ all: setup
 
 # --- 3. Include Generic Recipes ---
 # Provides the download rule.
-include ../common.mk
+include ../scripts/common.mk
 # Derives all filenames and provides extraction, clean, info, and preview rules.
-include ../texmex-fvecs.mk
+include ../scripts/texmex-fvecs.mk

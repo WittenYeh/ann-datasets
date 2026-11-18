@@ -63,13 +63,13 @@ $(QUERY_I8BIN):
 # ── conversions ───────────────────────────────────────────────────────────────
 $(RAW_BASE_FILE): $(BASE_I8BIN)
 	@echo "-> Converting first $(NUM_VECTORS) base vectors i8bin → fvecs..."
-	python3 ../i8bin_to_fvecs.py $(BASE_I8BIN) $(RAW_BASE_FILE) --limit $(NUM_VECTORS)
+	python3 ../scripts/i8bin_to_fvecs.py $(BASE_I8BIN) $(RAW_BASE_FILE) --limit $(NUM_VECTORS)
 
 $(QUERY_FILE): $(QUERY_I8BIN)
 	@echo "-> Converting query vectors i8bin → fvecs..."
-	python3 ../i8bin_to_fvecs.py $(QUERY_I8BIN) $(QUERY_FILE)
+	python3 ../scripts/i8bin_to_fvecs.py $(QUERY_I8BIN) $(QUERY_FILE)
 
-include ../deduplicate.mk
+include ../scripts/deduplicate.mk
 
 fetch: $(DOWNLOAD_FILES)
 

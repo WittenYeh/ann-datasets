@@ -13,7 +13,7 @@ BASE_FILE      := crawl_base.fvecs
 RAW_BASE_FILE  := crawl_base.raw.fvecs
 QUERY_FILE     := crawl_query.fvecs
 TRUTH_FILE     := crawl_groundtruth.ivecs
-ORIG_BASE_FILE := crawl_base_orig.fvecs
+FULL_BASE_FILE := crawl_base_orig.fvecs
 NUM_QUERIES    := 10000
 FINAL_FILES    := $(BASE_FILE) $(QUERY_FILE) $(TRUTH_FILE)
 # --- End of Configuration ---
@@ -41,23 +41,14 @@ $(VEC_FILE): $(ARCHIVE_FILE)
 		echo "-> $(VEC_FILE) already exists, skipping extraction."; \
 	fi
 
-# Convert to fvecs (produces the original base before query extraction)
-$(ORIG_BASE_FILE): $(VEC_FILE)
-	@if [ ! -f "$(ORIG_BASE_FILE)" ]; then \
-		echo "-> Converting .vec to .fvecs format..."; \
-		python3 ../vec_to_fvecs.py $(VEC_FILE) $(ORIG_BASE_FILE); \
-	else \
-		echo "-> $(ORIG_BASE_FILE) already exists, skipping conversion."; \
-	fi
+# Convert the complete source to fvecs
+$(FULL_BASE_FILE): $(VEC_FILE)
+	@set -eu; tmp=$$(mktemp "$@.XXXXXX"); \
+	trap 'rm -f "$$tmp"' EXIT HUP INT TERM; \
+	$(PYTHON) ../scripts/vec_to_fvecs.py "$<" "$$tmp"; mv -f "$$tmp" "$@"
 
-# Extract query vectors and compact base (removes query vectors from base)
-$(RAW_BASE_FILE) $(QUERY_FILE) &: $(ORIG_BASE_FILE)
-	@echo "-> Extracting $(NUM_QUERIES) random query vectors from base..."
-	python3 ../extract_query.py $(ORIG_BASE_FILE) $(RAW_BASE_FILE) $(QUERY_FILE) \
-		--num-queries $(NUM_QUERIES) --seed 42
-
-# Compute ground truth
-include ../deduplicate.mk
+include ../scripts/generate-queries.mk
+include ../scripts/deduplicate.mk
 
 # Download only
 fetch: $(ARCHIVE_FILE)
@@ -67,14 +58,14 @@ info:
 	@echo "=== $(DATASET_NAME) Dataset Information ==="
 	@for file in $(FINAL_FILES); do \
 		if [ -f "$$file" ]; then \
-			python3 ../preview_dataset.py $$file; \
+			python3 ../scripts/preview_dataset.py $$file; \
 		fi; \
 	done
 
 # Clean converted files
 clean:
 	@echo "-> Removing converted data files..."
-	rm -f $(FINAL_FILES) $(ORIG_BASE_FILE)
+	rm -f $(FINAL_FILES) $(FULL_BASE_FILE)
 
 # Clean source files
 clean-source:

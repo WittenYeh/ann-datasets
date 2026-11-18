@@ -16,7 +16,7 @@ to clamp the row count and the script will only mmap as many rows as
 actually exist on disk.
 
 Usage:
-  python i8bin_to_fvecs.py input.i8bin output.fvecs [--limit N]
+  python scripts/i8bin_to_fvecs.py input.i8bin output.fvecs [--limit N]
 """
 
 import argparse

@@ -25,11 +25,11 @@ Delta is null in JSON if min=0; delta_status distinguishes an infinite ratio
 (max>0) from undefined 0/0 (all coincident). Coordinates are not normalized.
 
 Examples (from the artea-benchmark root):
-  python3 third-party/ann-datasets/profile_pair_distance.py \
+  python3 third-party/ann-datasets/scripts/profile_pair_distance.py \
       --dataset sift-1m --device cuda:0 --output /tmp/sift-distances.json
-  python3 third-party/ann-datasets/profile_pair_distance.py \
+  python3 third-party/ann-datasets/scripts/profile_pair_distance.py \
       --base third-party/ann-datasets/glove-100d/glove100d_base.fvecs
-  python3 third-party/ann-datasets/profile_pair_distance.py \
+  python3 third-party/ann-datasets/scripts/profile_pair_distance.py \
       --dataset deep-10m --matmul tf32 --compile --device cuda:0
 """
 
@@ -54,7 +54,7 @@ def resolve_base(args):
 
     if args.base is not None:
         return expand(args.base).resolve()
-    repo = Path(__file__).resolve().parents[2]
+    repo = Path(__file__).resolve().parents[3]
     config_path = expand(args.config)
     if not config_path.is_absolute():
         config_path = repo / config_path

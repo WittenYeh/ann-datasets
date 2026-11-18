@@ -1,5 +1,5 @@
-# Shared pipeline: original base + publisher query (or fixed-seed split),
-# exact base deduplication, then our own top-k L2 ground truth.
+# Deduplicate the complete base and compute exact top-k L2 ground truth
+# for the queries prepared by the dataset Makefile.
 # Include after defining RAW_BASE_FILE, BASE_FILE, QUERY_FILE, TRUTH_FILE.
 PYTHON ?= python3
 GT_K ?= 1000
@@ -9,8 +9,8 @@ DATASET_RUN = env OMP_NUM_THREADS=$(DATASET_THREADS) NUMBA_NUM_THREADS=$(DATASET
 DEDUP_REPORT := $(BASE_FILE).dedup.json
 GT_CONFIG := $(TRUTH_FILE).config
 
-$(BASE_FILE) $(DEDUP_REPORT) &: $(RAW_BASE_FILE) ../deduplicate.py ../deduplicate.mk
-	$(DATASET_RUN) ../deduplicate.py $(RAW_BASE_FILE) $(BASE_FILE) \
+$(BASE_FILE) $(DEDUP_REPORT) &: $(RAW_BASE_FILE) ../scripts/deduplicate.py ../scripts/deduplicate.mk
+	$(DATASET_RUN) ../scripts/deduplicate.py $(RAW_BASE_FILE) $(BASE_FILE) \
 		--threads $(DATASET_THREADS) --report $(DEDUP_REPORT)
 
 # Recompute when options change, without making an unchanged build redo GT.
@@ -20,8 +20,8 @@ $(GT_CONFIG): FORCE_GT_CONFIG
 	printf '%s\n' 'k=$(GT_K)' 'chunk_size=$(GT_CHUNK_SIZE)' > "$$tmp"; \
 	if ! cmp -s "$$tmp" "$@"; then mv "$$tmp" "$@"; fi
 
-$(TRUTH_FILE): $(BASE_FILE) $(DEDUP_REPORT) $(QUERY_FILE) $(GT_CONFIG) ../compute_groundtruth.py ../vecs_io.py ../deduplicate.mk
-	$(DATASET_RUN) ../compute_groundtruth.py $(BASE_FILE) $(QUERY_FILE) $(TRUTH_FILE) \
+$(TRUTH_FILE): $(BASE_FILE) $(DEDUP_REPORT) $(QUERY_FILE) $(GT_CONFIG) ../scripts/compute_groundtruth.py ../scripts/vecs_io.py ../scripts/deduplicate.mk
+	$(DATASET_RUN) ../scripts/compute_groundtruth.py $(BASE_FILE) $(QUERY_FILE) $(TRUTH_FILE) \
 		--k $(GT_K) --chunk-size $(GT_CHUNK_SIZE)
 
 deduplicate: $(BASE_FILE) $(DEDUP_REPORT)

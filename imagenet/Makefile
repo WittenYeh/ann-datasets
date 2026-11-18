@@ -15,7 +15,7 @@ FINAL_FILES    := $(BASE_FILE) $(QUERY_FILE) $(TRUTH_FILE)
 all: setup
 .PHONY: all
 
-include ../common.mk
+include ../scripts/common.mk
 
 setup: $(FINAL_FILES)
 	@echo "-> $(DATASET_NAME) dataset setup complete!"
@@ -28,7 +28,7 @@ $(BASE_FILE) $(QUERY_FILE) &: $(ARCHIVE_FILE)
 
 $(TRUTH_FILE): $(BASE_FILE) $(QUERY_FILE)
 	@echo "-> Computing ground truth (~2.3M vectors, this may take a while)..."
-	python3 ../compute_groundtruth.py $(BASE_FILE) $(QUERY_FILE) $(TRUTH_FILE) --k 100
+	python3 ../scripts/compute_groundtruth.py $(BASE_FILE) $(QUERY_FILE) $(TRUTH_FILE) --k 100
 
 clean:
 	rm -f $(FINAL_FILES)

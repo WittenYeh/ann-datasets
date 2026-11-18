@@ -1,4 +1,4 @@
-# recipe-bvecs-gz.mk: Recipe for decompressing .gz files.
+# texmex-bvecs.mk: Recipe for decompressing .gz files.
 
 # The 'setup' target depends on the final, decompressed file.
 setup: $(FINAL_FILE)

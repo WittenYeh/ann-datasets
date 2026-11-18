@@ -29,7 +29,8 @@ except ImportError as error:
                       "python3 -m pip install -r requirements.txt") from error
 
 ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT))
+SCRIPTS = ROOT / "scripts"
+sys.path.insert(0, str(SCRIPTS))
 import deduplicate as dedup_module
 from deduplicate import deduplicate
 import compute_groundtruth as gt_module
@@ -121,7 +122,7 @@ class DeduplicationTest(unittest.TestCase):
         rows = [(-0.0, 1.0), (0.0, 1.0), (2.0, 3.0), (2.0, 3.0)]
         self.source.write_bytes(fvecs(rows))
         env = dict(os.environ, POLARS_MAX_THREADS="3")
-        command = [sys.executable, str(ROOT / "deduplicate.py"), str(self.source),
+        command = [sys.executable, str(SCRIPTS / "deduplicate.py"), str(self.source),
                    str(self.output), "--threads", "2"]
         result = subprocess.run(command, env=env, text=True, capture_output=True)
         self.assertEqual(result.returncode, 0, result.stderr)
@@ -265,7 +266,7 @@ class DeduplicationTest(unittest.TestCase):
         for threads in (1, 4):
             with self.subTest(polars_threads=threads):
                 result = subprocess.run(
-                    [sys.executable, str(ROOT / "deduplicate.py"), str(self.source),
+                    [sys.executable, str(SCRIPTS / "deduplicate.py"), str(self.source),
                      str(self.output), "--threads", "2"],
                     env=dict(os.environ, POLARS_MAX_THREADS=str(threads)),
                     text=True, capture_output=True)
@@ -459,17 +460,18 @@ class MakePipelineTest(unittest.TestCase):
         self.directory = tempfile.TemporaryDirectory()
         self.addCleanup(self.directory.cleanup)
         self.root = Path(self.directory.name)
-        for p in list(ROOT.glob("*.py")) + list(ROOT.glob("*.mk")):
-            (self.root / p.name).symlink_to(p)
+        (self.root / "scripts").symlink_to(SCRIPTS, target_is_directory=True)
         # Unsorted first occurrences expose accidental sorting/ID remapping.
         values = [float((7 * i + 3) % 20) for i in range(60)]
         self.rows = [(v, v * v) for v in values]
         self.queries = [(0.1, 0.2), (8.3, 61.7), (13.1, 170.2)]
         self.base_bytes, self.query_bytes = fvecs(self.rows), fvecs(self.queries)
-        # Fixed expected positions for the documented seed=42, n=60, nq=3.
-        query_ids = (5, 39, 45)
-        self.split_base = fvecs([row for i, row in enumerate(self.rows) if i not in query_ids])
-        self.split_query = fvecs([self.rows[i] for i in query_ids])
+
+    def generated_query(self, base, count=3, variance=0.0001):
+        rng = np.random.default_rng(42)
+        sources = np.asarray(base)[rng.choice(len(base), count, replace=False)]
+        noise = rng.standard_normal(sources.shape) * np.sqrt(variance)
+        return fvecs(sources + noise)
 
     def archive(self, directory, archive_name, prefix, members):
         with tarfile.open(directory / archive_name, "w:gz") as tar:
@@ -480,7 +482,7 @@ class MakePipelineTest(unittest.TestCase):
 
     def make(self, directory, *extra):
         command = ["make", "--no-print-directory", "-j4", "all", "GT_K=7", "GT_CHUNK_SIZE=13",
-                   "NUM_QUERIES=3", "NUM_VECTORS=60", *extra]
+                   "num_queries=3", "NUM_VECTORS=60", *extra]
         result = subprocess.run(command, cwd=directory, text=True, stdout=subprocess.PIPE,
                                 stderr=subprocess.STDOUT)
         self.assertEqual(result.returncode, 0, result.stdout)
@@ -527,7 +529,12 @@ class MakePipelineTest(unittest.TestCase):
                 elif name == "yahoomusic":
                     self.archive(directory, "yahoomusic.tar.gz", name,
                                  {"yahoomusic_query_all.fvecs": self.base_bytes})
-                    expected_raw, expected_query = self.split_base, self.split_query
+                    # Upgrade an existing split whose cached files are newer than the full source.
+                    (directory / "yahoomusic_query_all.fvecs").write_bytes(self.base_bytes)
+                    for suffix in ("_base.raw.fvecs", "_base.fvecs", "_query.fvecs"):
+                        (directory / (prefix + suffix)).write_bytes(self.base_bytes[:-12])
+                    (directory / (prefix + "_base.fvecs.dedup.json")).write_text("{}")
+                    expected_query = self.generated_query(list(dict.fromkeys(self.rows)))
                 elif name in ("crawl", "glove-100d"):
                     archive, member = (("crawl-300d-2M.vec.zip", "crawl-300d-2M.vec") if name == "crawl" else
                                        ("glove.2024.wikigiga.100d.zip", "glove_100_test_combined.txt"))
@@ -536,7 +543,7 @@ class MakePipelineTest(unittest.TestCase):
                         text = "60 2\n" + text
                     with zipfile.ZipFile(directory / archive, "w") as zipped:
                         zipped.writestr(member, text)
-                    expected_raw, expected_query = self.split_base, self.split_query
+                    expected_query = self.generated_query(list(dict.fromkeys(self.rows)))
                 elif name == "deep-10m":
                     parent = self.root / "deep-1b"
                     parent.mkdir()
@@ -552,8 +559,8 @@ class MakePipelineTest(unittest.TestCase):
                     expected_query = fvecs(queries)
                     expected_raw = fvecs(rows)
                 first = self.make(directory)
-                self.assertIn("../deduplicate.py", first)
-                self.assertIn("../compute_groundtruth.py", first)
+                self.assertIn("../scripts/deduplicate.py", first)
+                self.assertIn("../scripts/compute_groundtruth.py", first)
                 self.assertNotIn("bin_to_ivecs", first)
                 self.assertNotIn("Downloading", first)
                 self.check(directory, prefix, expected_raw, expected_query)
@@ -563,18 +570,54 @@ class MakePipelineTest(unittest.TestCase):
                 self.make(directory)
                 self.assertEqual(mtimes, [p.stat().st_mtime_ns for p in files])
                 changed = self.make(directory, "GT_K=4")
-                self.assertNotIn("../deduplicate.py", changed)
-                self.assertIn("../compute_groundtruth.py", changed)
+                self.assertNotIn("../scripts/deduplicate.py", changed)
+                self.assertIn("../scripts/compute_groundtruth.py", changed)
                 self.check(directory, prefix, expected_raw, expected_query, k=4)
                 changed = self.make(directory, "GT_K=4", "GT_CHUNK_SIZE=5")
-                self.assertNotIn("../deduplicate.py", changed)
-                self.assertIn("../compute_groundtruth.py", changed)
+                self.assertNotIn("../scripts/deduplicate.py", changed)
+                self.assertIn("../scripts/compute_groundtruth.py", changed)
                 self.check(directory, prefix, expected_raw, expected_query, k=4)
+                changed = self.make(directory, "GT_K=4", "GT_CHUNK_SIZE=5", "variance=0.04")
+                if name in ("crawl", "glove-100d", "yahoomusic"):
+                    self.assertIn("../scripts/generate_queries.py", changed)
+                    self.assertIn("../scripts/compute_groundtruth.py", changed)
+                    self.assertEqual(files[0].stat().st_mtime_ns, mtimes[0])
+                    self.check(directory, prefix, expected_raw,
+                               self.generated_query(list(dict.fromkeys(self.rows)), variance=0.04), k=4)
+                else:
+                    self.assertNotIn("../scripts/generate_queries.py", changed)
+                    self.assertNotIn("../scripts/compute_groundtruth.py", changed)
+                    self.assertEqual(files[1].stat().st_mtime_ns, mtimes[1])
                 if name == "sift-1m":
                     for missing in files + [directory / (prefix + "_base.fvecs.dedup.json")]:
                         missing.unlink()
                         self.make(directory)
                         self.check(directory, prefix, expected_raw, expected_query)
+
+    def test_glove_200d_and_300d_keep_all_rows_and_rebuild_when_count_changes(self):
+        rows = self.rows * 2  # More than 100 rows, including duplicates.
+        for dim in (200, 300):
+            with self.subTest(dim=dim):
+                directory = self.root / f"glove-{dim}d"
+                directory.mkdir()
+                shutil.copyfile(ROOT / directory.name / "Makefile", directory / "Makefile")
+                with zipfile.ZipFile(directory / f"glove.2024.wikigiga.{dim}d.zip", "w") as archive:
+                    archive.writestr(f"glove_{dim}_test_combined.txt",
+                                     "".join(f"word{i} {x} {y}\n" for i, (x, y) in enumerate(rows)))
+                prefix = f"glove{dim}d"
+                base = directory / (prefix + "_base.fvecs")
+                query = directory / (prefix + "_query.fvecs")
+                truth = directory / (prefix + "_groundtruth.ivecs")
+                self.make(directory)
+                self.assertEqual(base.read_bytes(), fvecs(rows))
+                self.assertEqual(query.read_bytes(), self.generated_query(rows))
+                mtime = base.stat().st_mtime_ns
+                self.make(directory, "num_queries=5")
+                self.assertEqual(base.stat().st_mtime_ns, mtime)
+                expected = self.generated_query(rows, count=5)
+                self.assertEqual(query.read_bytes(), expected)
+                queries = np.frombuffer(expected, dtype="<f4").reshape(5, 3)[:, 1:]
+                check_groundtruth(self, truth, rows, queries, k=100)
 
     def test_checker_rejects_incomplete_base_even_with_consistent_gt(self):
         prefix = "bad"

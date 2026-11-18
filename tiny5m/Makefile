@@ -16,7 +16,7 @@ FINAL_FILES    := $(BASE_FILE) $(QUERY_FILE) $(TRUTH_FILE)
 all: setup
 .PHONY: all
 
-include ../common.mk
+include ../scripts/common.mk
 
 setup: $(FINAL_FILES)
 	@echo "-> $(DATASET_NAME) dataset setup complete!"
@@ -31,7 +31,7 @@ $(RAW_BASE_FILE) $(QUERY_FILE) &: $(ARCHIVE_FILE)
 	mv "$$stage/$(EXTRACT_DIR)/$(QUERY_FILE)" $(QUERY_FILE); \
 	touch $(RAW_BASE_FILE) $(QUERY_FILE)
 
-include ../deduplicate.mk
+include ../scripts/deduplicate.mk
 
 clean:
 	rm -f $(FINAL_FILES)

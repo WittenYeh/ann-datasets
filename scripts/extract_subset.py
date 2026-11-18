@@ -5,10 +5,10 @@ Extract subset from large vector datasets (fvecs, bvecs, ivecs).
 Uses memory-mapped I/O to avoid loading the entire source file into RAM.
 
 Usage:
-  python extract_subset.py <input_file> <output_file> <num_vectors>
+  python scripts/extract_subset.py <input_file> <output_file> <num_vectors>
 
 Example:
-  python extract_subset.py bigann_base.bvecs sift10m_base.bvecs 10000000
+  python scripts/extract_subset.py bigann_base.bvecs sift10m_base.bvecs 10000000
 """
 
 import argparse
@@ -56,7 +56,7 @@ def extract_subset(input_file, output_file, num_vectors):
 def main():
     parser = argparse.ArgumentParser(
         description="Extract subset from large vector datasets",
-        epilog="Example: python extract_subset.py bigann_base.bvecs sift10m_base.bvecs 10000000",
+        epilog="Example: python scripts/extract_subset.py bigann_base.bvecs sift10m_base.bvecs 10000000",
     )
     parser.add_argument("input_file", help="Input vector file (fvecs/bvecs/ivecs)")
     parser.add_argument("output_file", help="Output vector file")

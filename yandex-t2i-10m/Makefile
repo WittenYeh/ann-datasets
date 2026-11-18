@@ -71,16 +71,16 @@ $(GT_BIN):
 # ── conversions ───────────────────────────────────────────────────────────────
 $(BASE_FILE): $(BASE_FBIN)
 	@echo "-> Converting base vectors to fvecs format..."
-	python3 ../fbin_to_fvecs.py $(BASE_FBIN) $(BASE_FILE)
+	python3 ../scripts/fbin_to_fvecs.py $(BASE_FBIN) $(BASE_FILE)
 
 # Trim queries to NUM_QUERIES so they line up with the published GT row count.
 $(QUERY_FILE): $(QUERY_FBIN)
 	@echo "-> Converting first $(NUM_QUERIES) query vectors to fvecs format..."
-	python3 ../fbin_to_fvecs.py $(QUERY_FBIN) $(QUERY_FILE) --limit $(NUM_QUERIES)
+	python3 ../scripts/fbin_to_fvecs.py $(QUERY_FBIN) $(QUERY_FILE) --limit $(NUM_QUERIES)
 
 $(TRUTH_FILE): $(GT_BIN)
 	@echo "-> Converting ground truth to ivecs format..."
-	python3 ../bin_to_ivecs.py $(GT_BIN) $(TRUTH_FILE)
+	python3 ../scripts/bin_to_ivecs.py $(GT_BIN) $(TRUTH_FILE)
 
 fetch: $(DOWNLOAD_FILES)
 

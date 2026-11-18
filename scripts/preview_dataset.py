@@ -8,8 +8,8 @@ Supports:
 - ivecs: int32 vectors (4 bytes per element)
 
 Usage:
-  python preview_dataset.py <filename>
-  python preview_dataset.py <filename> --preview 5
+  python scripts/preview_dataset.py <filename>
+  python scripts/preview_dataset.py <filename> --preview 5
 """
 
 import argparse
@@ -127,7 +127,7 @@ def format_size(size_bytes):
 def main():
     parser = argparse.ArgumentParser(
         description="Preview vector dataset files (fvecs, bvecs, ivecs)",
-        epilog="Example: python preview_dataset.py sift_base.fvecs --preview 5"
+        epilog="Example: python scripts/preview_dataset.py sift_base.fvecs --preview 5"
     )
 
     parser.add_argument("filename", help="Path to vector file")

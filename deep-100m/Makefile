@@ -26,17 +26,17 @@ setup: $(FINAL_FILES)
 
 $(BASE_FILE): $(SOURCE_BASE)
 	@echo "-> Extracting $(NUM_VECTORS) base vectors..."
-	python3 ../extract_subset.py $(SOURCE_BASE) $(BASE_FILE) $(NUM_VECTORS)
+	python3 ../scripts/extract_subset.py $(SOURCE_BASE) $(BASE_FILE) $(NUM_VECTORS)
 
 $(QUERY_FILE): $(SOURCE_QUERY)
 	cp $(SOURCE_QUERY) $(QUERY_FILE)
 
 $(LEARN_FILE): $(SOURCE_LEARN)
-	python3 ../extract_subset.py $(SOURCE_LEARN) $(LEARN_FILE) $(NUM_VECTORS)
+	python3 ../scripts/extract_subset.py $(SOURCE_LEARN) $(LEARN_FILE) $(NUM_VECTORS)
 
 $(TRUTH_FILE): $(BASE_FILE) $(QUERY_FILE)
 	@echo "-> Computing ground truth for $(DATASET_NAME)..."
-	python3 ../compute_groundtruth.py $(BASE_FILE) $(QUERY_FILE) $(TRUTH_FILE) --k 100
+	python3 ../scripts/compute_groundtruth.py $(BASE_FILE) $(QUERY_FILE) $(TRUTH_FILE) --k 100
 
 clean:
 	rm -f $(FINAL_FILES)

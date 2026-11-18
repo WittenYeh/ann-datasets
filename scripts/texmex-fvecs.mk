@@ -1,4 +1,4 @@
-# recipe-fvecs-tgz.mk:
+# texmex-fvecs.mk:
 # A smart recipe for .tar.gz archives from the Tex-Mex corpus (ftp.irisa.fr).
 # It uses conventions to automatically derive all necessary variables from ARCHIVE_FILE.
 
@@ -40,7 +40,7 @@ $(RAW_BASE_FILE) $(QUERY_FILE) $(LEARN_FILE) &: $(ARCHIVE_FILE)
 	mv "$$stage/$(EXTRACT_DIR)/$(LEARN_FILE)" $(LEARN_FILE); \
 	touch $(RAW_BASE_FILE) $(QUERY_FILE) $(LEARN_FILE)
 
-include ../deduplicate.mk
+include ../scripts/deduplicate.mk
 else
 $(FINAL_FILES): $(ARCHIVE_FILE)
 	@# This 'if' block ensures the extraction command runs only once.
@@ -67,7 +67,7 @@ info:
 	@echo "=== $(DATASET_NAME) Dataset Information ==="
 	@for file in $(FINAL_FILES); do \
 		if [ -f "$$file" ]; then \
-			python3 ../preview_dataset.py $$file; \
+			python3 ../scripts/preview_dataset.py $$file; \
 		fi; \
 	done
 

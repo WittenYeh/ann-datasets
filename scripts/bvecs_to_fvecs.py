@@ -16,7 +16,7 @@ Memory-mapped input + chunked write keep peak RAM bounded so the script
 streams multi-GB files.
 
 Usage:
-  python bvecs_to_fvecs.py input.bvecs output.fvecs [--limit N]
+  python scripts/bvecs_to_fvecs.py input.bvecs output.fvecs [--limit N]
 """
 
 import argparse

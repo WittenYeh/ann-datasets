@@ -27,15 +27,15 @@ setup: $(FINAL_FILES)
 
 $(RAW_BASE_FILE): $(SOURCE_BASE)
 	@echo "-> Extracting $(NUM_VECTORS) base vectors..."
-	python3 ../extract_subset.py $(SOURCE_BASE) $(RAW_BASE_FILE) $(NUM_VECTORS)
+	python3 ../scripts/extract_subset.py $(SOURCE_BASE) $(RAW_BASE_FILE) $(NUM_VECTORS)
 
 $(QUERY_FILE): $(SOURCE_QUERY)
 	cp $(SOURCE_QUERY) $(QUERY_FILE)
 
 $(LEARN_FILE): $(SOURCE_LEARN)
-	python3 ../extract_subset.py $(SOURCE_LEARN) $(LEARN_FILE) $(NUM_VECTORS)
+	python3 ../scripts/extract_subset.py $(SOURCE_LEARN) $(LEARN_FILE) $(NUM_VECTORS)
 
-include ../deduplicate.mk
+include ../scripts/deduplicate.mk
 
 clean:
 	rm -f $(FINAL_FILES)

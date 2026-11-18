@@ -6,10 +6,10 @@ For large base sets the search is performed in chunks so that only one chunk
 resides in RAM at a time, keeping peak memory bounded.
 
 Usage:
-  python compute_groundtruth.py <base_file> <query_file> <output_file> [--k K] [--chunk-size N]
+  python scripts/compute_groundtruth.py <base_file> <query_file> <output_file> [--k K] [--chunk-size N]
 
 Example:
-  python compute_groundtruth.py deep10m_base.fvecs deep10m_query.fvecs deep10m_groundtruth.ivecs --k 100
+  python scripts/compute_groundtruth.py deep10m_base.fvecs deep10m_query.fvecs deep10m_groundtruth.ivecs --k 100
 """
 
 import argparse

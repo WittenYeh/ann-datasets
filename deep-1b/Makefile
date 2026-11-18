@@ -47,20 +47,20 @@ $(GT_BIN):
 # Convert .fbin -> .fvecs
 $(BASE_FILE): $(BASE_FBIN)
 	@echo "-> Converting base vectors to fvecs format..."
-	python3 ../fbin_to_fvecs.py $(BASE_FBIN) $(BASE_FILE)
+	python3 ../scripts/fbin_to_fvecs.py $(BASE_FBIN) $(BASE_FILE)
 
 $(QUERY_FILE): $(QUERY_FBIN)
 	@echo "-> Converting query vectors to fvecs format..."
-	python3 ../fbin_to_fvecs.py $(QUERY_FBIN) $(QUERY_FILE)
+	python3 ../scripts/fbin_to_fvecs.py $(QUERY_FBIN) $(QUERY_FILE)
 
 $(LEARN_FILE): $(LEARN_FBIN)
 	@echo "-> Converting learn vectors to fvecs format..."
-	python3 ../fbin_to_fvecs.py $(LEARN_FBIN) $(LEARN_FILE)
+	python3 ../scripts/fbin_to_fvecs.py $(LEARN_FBIN) $(LEARN_FILE)
 
 # Convert .bin -> .ivecs
 $(TRUTH_FILE): $(GT_BIN)
 	@echo "-> Converting ground truth to ivecs format..."
-	python3 ../bin_to_ivecs.py $(GT_BIN) $(TRUTH_FILE)
+	python3 ../scripts/bin_to_ivecs.py $(GT_BIN) $(TRUTH_FILE)
 
 fetch: $(DOWNLOAD_FILES)
 

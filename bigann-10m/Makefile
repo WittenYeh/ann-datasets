@@ -51,32 +51,32 @@ setup: $(FINAL_FILES)
 # -- truncate (uint8 .bvecs intermediates) ----------------------------------
 $(BASE_BVECS): $(SOURCE_BASE)
 	@echo "-> Extracting first $(NUM_VECTORS) base vectors (uint8)..."
-	python3 ../extract_subset.py $(SOURCE_BASE) $(BASE_BVECS) $(NUM_VECTORS)
+	python3 ../scripts/extract_subset.py $(SOURCE_BASE) $(BASE_BVECS) $(NUM_VECTORS)
 
 $(QUERY_BVECS): $(SOURCE_QUERY)
 	cp $(SOURCE_QUERY) $(QUERY_BVECS)
 
 $(LEARN_BVECS): $(SOURCE_LEARN)
 	@echo "-> Extracting first $(NUM_VECTORS) learn vectors (uint8)..."
-	python3 ../extract_subset.py $(SOURCE_LEARN) $(LEARN_BVECS) $(NUM_VECTORS)
+	python3 ../scripts/extract_subset.py $(SOURCE_LEARN) $(LEARN_BVECS) $(NUM_VECTORS)
 
 # -- upcast (uint8 -> float32 .fvecs) ----------------------------------------
 $(BASE_FILE): $(BASE_BVECS)
 	@echo "-> Upcasting base bvecs -> fvecs (uint8 -> float32)..."
-	python3 ../bvecs_to_fvecs.py $(BASE_BVECS) $(BASE_FILE)
+	python3 ../scripts/bvecs_to_fvecs.py $(BASE_BVECS) $(BASE_FILE)
 
 $(QUERY_FILE): $(QUERY_BVECS)
 	@echo "-> Upcasting query bvecs -> fvecs..."
-	python3 ../bvecs_to_fvecs.py $(QUERY_BVECS) $(QUERY_FILE)
+	python3 ../scripts/bvecs_to_fvecs.py $(QUERY_BVECS) $(QUERY_FILE)
 
 $(LEARN_FILE): $(LEARN_BVECS)
 	@echo "-> Upcasting learn bvecs -> fvecs..."
-	python3 ../bvecs_to_fvecs.py $(LEARN_BVECS) $(LEARN_FILE)
+	python3 ../scripts/bvecs_to_fvecs.py $(LEARN_BVECS) $(LEARN_FILE)
 
 # -- ground truth (computed on the float32 base/query; ids match uint8) -----
 $(TRUTH_FILE): $(BASE_FILE) $(QUERY_FILE)
 	@echo "-> Computing ground truth for $(DATASET_NAME)..."
-	python3 ../compute_groundtruth.py $(BASE_FILE) $(QUERY_FILE) $(TRUTH_FILE) --k 100
+	python3 ../scripts/compute_groundtruth.py $(BASE_FILE) $(QUERY_FILE) $(TRUTH_FILE) --k 100
 
 fetch: $(INTERMEDIATES)
 

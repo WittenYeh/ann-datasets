@@ -54,7 +54,7 @@ $(BASE_FILE) $(QUERY_FILE): $(ARCHIVE_FILE)
 # Compute ground truth
 $(TRUTH_FILE): $(BASE_FILE) $(QUERY_FILE)
 	@echo "-> Computing ground truth (k=100)..."
-	python3 ../compute_groundtruth.py $(BASE_FILE) $(QUERY_FILE) $(TRUTH_FILE) --k 100
+	python3 ../scripts/compute_groundtruth.py $(BASE_FILE) $(QUERY_FILE) $(TRUTH_FILE) --k 100
 
 # Download only
 fetch: $(ARCHIVE_FILE)
@@ -64,7 +64,7 @@ info:
 	@echo "=== $(DATASET_NAME) Dataset Information ==="
 	@for file in $(FINAL_FILES); do \
 		if [ -f "$$file" ]; then \
-			python3 ../preview_dataset.py $$file; \
+			python3 ../scripts/preview_dataset.py $$file; \
 		fi; \
 	done
 

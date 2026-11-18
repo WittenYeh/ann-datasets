@@ -5,7 +5,7 @@ Convert GloVe .txt text format to fvecs binary format.
 GloVe format: each line is "word val1 val2 ... valN" with no header line.
 
 Usage:
-  python glove_to_fvecs.py <input.txt> <output.fvecs>
+  python scripts/glove_to_fvecs.py <input.txt> <output.fvecs>
 """
 
 import argparse

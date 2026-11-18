@@ -10,8 +10,8 @@ files, then verifies:
   5. GT correctness sampling (--verify-gt): brute-force on sampled queries
 
 Usage:
-    python verify_datasets.py
-    python verify_datasets.py --verify-gt [--gt-samples 20]
+    python scripts/verify_datasets.py
+    python scripts/verify_datasets.py --verify-gt [--gt-samples 20]
 """
 
 import argparse
@@ -205,7 +205,7 @@ def main():
             print("Error: --verify-gt requires faiss. Install: pip install faiss-cpu")
             sys.exit(1)
 
-    root = Path(__file__).resolve().parent
+    root = Path(__file__).resolve().parents[1]
     datasets = discover_datasets(root)
 
     if not datasets:

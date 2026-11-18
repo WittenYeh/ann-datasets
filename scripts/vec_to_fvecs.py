@@ -5,10 +5,10 @@ Convert fastText .vec text format to fvecs binary format.
 Writes output in streaming chunks to avoid holding all vectors in RAM.
 
 Usage:
-  python vec_to_fvecs.py <input.vec> <output.fvecs> [--max-vectors N]
+  python scripts/vec_to_fvecs.py <input.vec> <output.fvecs> [--max-vectors N]
 
 Example:
-  python vec_to_fvecs.py crawl-300d-2M.vec crawl_base.fvecs
+  python scripts/vec_to_fvecs.py crawl-300d-2M.vec crawl_base.fvecs
 """
 
 import argparse
@@ -83,7 +83,7 @@ def _flush(fout, buf, count, dim):
 def main():
     parser = argparse.ArgumentParser(
         description="Convert fastText .vec text format to fvecs binary format",
-        epilog="Example: python vec_to_fvecs.py crawl-300d-2M.vec crawl_base.fvecs",
+        epilog="Example: python scripts/vec_to_fvecs.py crawl-300d-2M.vec crawl_base.fvecs",
     )
     parser.add_argument("input_file", help="Input .vec text file")
     parser.add_argument("output_file", help="Output .fvecs binary file")

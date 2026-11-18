@@ -8,7 +8,7 @@ URL            := https://nlp.stanford.edu/data/wordvecs/glove.2024.wikigiga.200
 TXT_FILE       := glove200d.txt
 NUM_QUERIES    := 1000
 
-ORIG_BASE_FILE := glove200d_base_orig.fvecs
+FULL_BASE_FILE := glove200d_base_orig.fvecs
 BASE_FILE      := glove200d_base.fvecs
 QUERY_FILE     := glove200d_query.fvecs
 TRUTH_FILE     := glove200d_groundtruth.ivecs
@@ -16,8 +16,6 @@ FINAL_FILES    := $(BASE_FILE) $(QUERY_FILE) $(TRUTH_FILE)
 
 all: setup
 .PHONY: all
-
-include ../common.mk
 
 setup: $(FINAL_FILES)
 	@echo "-> $(DATASET_NAME) dataset setup complete!"
@@ -36,30 +34,24 @@ $(TXT_FILE): $(ARCHIVE_FILE)
 	fi
 
 # Convert GloVe txt to fvecs
-$(ORIG_BASE_FILE): $(TXT_FILE)
-	@if [ ! -f "$(ORIG_BASE_FILE)" ]; then \
-		echo "-> Converting GloVe txt to fvecs..."; \
-		python3 ../glove_to_fvecs.py $(TXT_FILE) $(ORIG_BASE_FILE); \
-	else \
-		echo "-> $(ORIG_BASE_FILE) already exists, skipping conversion."; \
-	fi
+$(FULL_BASE_FILE): $(TXT_FILE)
+	@set -eu; tmp=$$(mktemp "$@.XXXXXX"); \
+	trap 'rm -f "$$tmp"' EXIT HUP INT TERM; \
+	$(PYTHON) ../scripts/glove_to_fvecs.py "$<" "$$tmp"; mv -f "$$tmp" "$@"
 
-# Extract query vectors and compact base
-$(BASE_FILE) $(QUERY_FILE) &: $(ORIG_BASE_FILE)
-	@echo "-> Extracting $(NUM_QUERIES) random query vectors from base..."
-	python3 ../extract_query.py $(ORIG_BASE_FILE) $(BASE_FILE) $(QUERY_FILE) \
-		--num-queries $(NUM_QUERIES) --seed 42
+include ../scripts/generate-queries.mk
 
 # Compute ground truth
-$(TRUTH_FILE): $(BASE_FILE) $(QUERY_FILE)
+$(TRUTH_FILE): $(BASE_FILE) $(QUERY_FILE) ../scripts/compute_groundtruth.py ../scripts/vecs_io.py
 	@echo "-> Computing ground truth (k=100)..."
-	python3 ../compute_groundtruth.py $(BASE_FILE) $(QUERY_FILE) $(TRUTH_FILE) --k 100
+	OMP_NUM_THREADS=$$(nproc) numactl --interleave=all $(PYTHON) \
+		../scripts/compute_groundtruth.py $(BASE_FILE) $(QUERY_FILE) $(TRUTH_FILE) --k 100
 
 # Download only
 fetch: $(ARCHIVE_FILE)
 
 clean:
-	rm -f $(FINAL_FILES) $(ORIG_BASE_FILE)
+	rm -f $(FINAL_FILES) $(FULL_BASE_FILE)
 
 clean-source:
 	rm -f $(TXT_FILE)
