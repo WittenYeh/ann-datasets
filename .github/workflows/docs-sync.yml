@@ -1,0 +1,20 @@
+name: Sync docs to academic homepage
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'README.md'
+      - 'docs/**'
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger homepage deployment
+        env:
+          GH_TOKEN: ${{ secrets.HOMEPAGE_DISPATCH_TOKEN }}
+        run: gh workflow run pages.yml --repo WittenYeh/WittenYeh.github.io --ref main
