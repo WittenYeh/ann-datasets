@@ -20,6 +20,7 @@ __pycache__/
 *.ivecs.config
 *.fvecs.config
 *.fvecs.full
+*/variants/
 
 # Bulk-data files inside dataset dirs are already filtered by the
 # extension patterns above. Add explicit entries for ground-truth

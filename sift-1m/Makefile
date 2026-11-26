@@ -15,7 +15,5 @@ all: setup
 .PHONY: all
 
 # --- 3. Include Generic Recipes ---
-# Provides the download rule.
-include ../scripts/common.mk
 # Derives all filenames and provides extraction, clean, info, and preview rules.
 include ../scripts/texmex-fvecs.mk

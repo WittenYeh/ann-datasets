@@ -17,6 +17,12 @@ FINAL_FILES    := $(BASE_FILE) $(QUERY_FILE) $(TRUTH_FILE)
 # --- End of Configuration ---
 
 all: setup
+.PHONY: all
+
+query-gen ?= published
+ifneq ($(query-gen),published)
+include ../scripts/query-variant.mk
+else
 
 setup: $(FINAL_FILES)
 	@echo "-> $(DATASET_NAME) dataset setup complete!"
@@ -79,3 +85,5 @@ clean-all: clean
 	rm -f $(ARCHIVE_FILE)
 
 .PHONY: all setup fetch info clean clean-all
+
+endif

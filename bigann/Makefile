@@ -28,6 +28,11 @@ FINAL_FILES    := $(BASE_FILE) $(LEARN_FILE) $(QUERY_FILE) $(TRUTH_FILE)
 all: setup
 .PHONY: all
 
+query-gen ?= published
+ifneq ($(query-gen),published)
+include ../scripts/query-variant.mk
+else
+
 # --- 3. Include Generic Recipes ---
 include ../scripts/common.mk
 
@@ -117,3 +122,5 @@ clean-all: clean
 	rm -f $(DOWNLOAD_FILES)
 
 .PHONY: all setup fetch info clean clean-all
+
+endif

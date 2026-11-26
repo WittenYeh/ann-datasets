@@ -8,7 +8,7 @@ For installation and a first dataset, start with [Quick Start](../README.md#quic
 | Guide | SIFT-1M example | What it covers |
 |-------|-----------------|----------------|
 | [Base dataset](base-dataset.md) | `sift_base.fvecs` | The vectors to index, how the base is prepared, and how deduplication affects row IDs. |
-| [Query dataset](query-sets.md) | `sift_query.fvecs` | The vectors to search with, when to use publisher queries, and how to generate queries with `num_queries` and `variance`. |
+| [Query dataset](query-sets.md) | `sift_query.fvecs` | Choose `drawout`, `gaussian`, or published queries with `query-gen` and set the query count and noise variance. |
 | [Ground truth](ground-truth.md) | `sift_groundtruth.ivecs` | The expected neighbor IDs for each query, the metric they use, and how to compute and check them. |
 
 ## Reference

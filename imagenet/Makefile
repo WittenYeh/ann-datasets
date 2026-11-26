@@ -15,6 +15,11 @@ FINAL_FILES    := $(BASE_FILE) $(QUERY_FILE) $(TRUTH_FILE)
 all: setup
 .PHONY: all
 
+query-gen ?= published
+ifneq ($(query-gen),published)
+include ../scripts/query-variant.mk
+else
+
 include ../scripts/common.mk
 
 setup: $(FINAL_FILES)
@@ -34,3 +39,5 @@ clean:
 	rm -f $(FINAL_FILES)
 
 .PHONY: all setup clean
+
+endif

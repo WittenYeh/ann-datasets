@@ -20,6 +20,16 @@ FINAL_FILES    := $(BASE_FILE) $(QUERY_FILE) $(LEARN_FILE) $(TRUTH_FILE)
 # --- End of Variable Derivation ---
 
 
+ifeq ($(DEDUPLICATE_BASE),1)
+RAW_BASE_FILE := $(ARCHIVE_PREFIX)_base.raw.fvecs
+endif
+
+query-gen ?= published
+ifneq ($(query-gen),published)
+include ../scripts/query-variant.mk
+else
+include ../scripts/common.mk
+
 # --- 2. Generic Rules ---
 # The main 'setup' target depends on all final files.
 setup: $(FINAL_FILES)
@@ -27,8 +37,6 @@ setup: $(FINAL_FILES)
 
 # Generic rule to create final files from the archive with auto-extraction.
 ifeq ($(DEDUPLICATE_BASE),1)
-RAW_BASE_FILE := $(ARCHIVE_PREFIX)_base.raw.fvecs
-
 # Select only vectors from the archive. Publisher GT refers to the original IDs.
 $(RAW_BASE_FILE) $(QUERY_FILE) $(LEARN_FILE) &: $(ARCHIVE_FILE)
 	@set -eu; stage=$$(mktemp -d .extract.XXXXXX); \
@@ -83,3 +91,5 @@ clean-all: clean
 
 # --- 3. Phony Targets ---
 .PHONY: setup clean info
+
+endif

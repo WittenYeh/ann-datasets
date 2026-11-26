@@ -1,28 +1,29 @@
-# Deduplicate the complete base and compute exact top-k L2 ground truth
-# for the queries prepared by the dataset Makefile.
-# Include after defining RAW_BASE_FILE, BASE_FILE, QUERY_FILE, TRUTH_FILE.
+# Deduplicate RAW_BASE_FILE when supplied, then compute exact neighbors.
 PYTHON ?= python3
 GT_K ?= 1000
 GT_CHUNK_SIZE ?= 2000000
+GT_METRIC ?= l2
 DATASET_THREADS := $(shell nproc)
 DATASET_RUN = env OMP_NUM_THREADS=$(DATASET_THREADS) NUMBA_NUM_THREADS=$(DATASET_THREADS) POLARS_MAX_THREADS=$(DATASET_THREADS) OPENBLAS_NUM_THREADS=$(DATASET_THREADS) MKL_NUM_THREADS=$(DATASET_THREADS) numactl --interleave=all $(PYTHON)
-DEDUP_REPORT := $(BASE_FILE).dedup.json
 GT_CONFIG := $(TRUTH_FILE).config
 
+ifneq ($(RAW_BASE_FILE),)
+DEDUP_REPORT := $(BASE_FILE).dedup.json
 $(BASE_FILE) $(DEDUP_REPORT) &: $(RAW_BASE_FILE) ../scripts/deduplicate.py ../scripts/deduplicate.mk
 	$(DATASET_RUN) ../scripts/deduplicate.py $(RAW_BASE_FILE) $(BASE_FILE) \
 		--threads $(DATASET_THREADS) --report $(DEDUP_REPORT)
+endif
 
 # Recompute when options change, without making an unchanged build redo GT.
 $(GT_CONFIG): FORCE_GT_CONFIG
 	@set -eu; tmp=$$(mktemp "$(GT_CONFIG).XXXXXX"); \
 	trap 'rm -f "$$tmp"' EXIT HUP INT TERM; \
-	printf '%s\n' 'k=$(GT_K)' 'chunk_size=$(GT_CHUNK_SIZE)' > "$$tmp"; \
+	printf '%s\n' 'k=$(GT_K)' 'chunk_size=$(GT_CHUNK_SIZE)' 'metric=$(GT_METRIC)' > "$$tmp"; \
 	if ! cmp -s "$$tmp" "$@"; then mv "$$tmp" "$@"; fi
 
 $(TRUTH_FILE): $(BASE_FILE) $(DEDUP_REPORT) $(QUERY_FILE) $(GT_CONFIG) ../scripts/compute_groundtruth.py ../scripts/vecs_io.py ../scripts/deduplicate.mk
 	$(DATASET_RUN) ../scripts/compute_groundtruth.py $(BASE_FILE) $(QUERY_FILE) $(TRUTH_FILE) \
-		--k $(GT_K) --chunk-size $(GT_CHUNK_SIZE)
+		--k $(GT_K) --chunk-size $(GT_CHUNK_SIZE) --metric $(GT_METRIC)
 
 deduplicate: $(BASE_FILE) $(DEDUP_REPORT)
 groundtruth: $(TRUTH_FILE)

@@ -17,6 +17,11 @@ FINAL_FILES    := $(BASE_FILE) $(QUERY_FILE) $(LEARN_FILE) $(TRUTH_FILE)
 all: setup
 .PHONY: all
 
+query-gen ?= published
+ifneq ($(query-gen),published)
+include ../scripts/query-variant.mk
+else
+
 $(SOURCE_BASE) $(SOURCE_QUERY) $(SOURCE_LEARN):
 	@echo "-> SIFT1B source not found, building bigann first..."
 	$(MAKE) -C $(SIFT1B_DIR) setup
@@ -42,3 +47,5 @@ clean:
 	rm -f $(FINAL_FILES)
 
 .PHONY: all setup clean
+
+endif

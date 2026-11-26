@@ -14,7 +14,8 @@ The catalog gives the nominal size and links to each dataset's Makefile. [Datase
 ## Datasets with deduplicated bases
 
 SIFT-1M, GIST-1M, Crawl, GloVe-100d, YahooMusic, Tiny-5M, DEEP-10M, and SpaceV-10M use the same deduplication recipe.
-It reads the complete `*_base.raw.fvecs` and writes `*_base.fvecs`, keeping the bytes and input order of the first occurrence of each distinct vector.
+It reads `*_base.raw.fvecs` and writes `*_base.fvecs`, keeping the bytes and input order of the first occurrence of each distinct vector.
+With `query-gen=drawout`, the raw input to deduplication contains the rows left after sampling. [Query methods](query-sets.md)
 For SIFT-1M, the following target prepares the base and its report. [Shared Make rules](../scripts/deduplicate.mk)
 
 ```bash

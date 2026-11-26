@@ -35,7 +35,8 @@ Query counts are the defaults used by the recipes.
 
 **Parent** recipes take a prefix of the parent base and reuse its published queries.
 Preparing one of these subsets can also download and prepare its billion-scale parent.
-**Generated** recipes sample the prepared base and perturb the sampled vectors. [Query generation and defaults](query-sets.md)
+**Generated** recipes hold sampled rows out of the base by default (`query-gen=drawout`).
+Select `query-gen=gaussian` to keep the full base and perturb the query copies. [Query generation and defaults](query-sets.md)
 
 **Yandex T2I-10M** uses inner product and keeps the first 10,000 public text queries covered by its ground-truth file.
 **SpaceV-10M** uses L2 and the Standard Track's in-distribution document queries.

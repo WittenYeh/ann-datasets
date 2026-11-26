@@ -12,5 +12,4 @@ all: setup
 .PHONY: all
 
 # --- 3. Include Generic Recipes ---
-include ../scripts/common.mk
 include ../scripts/texmex-fvecs.mk

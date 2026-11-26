@@ -41,6 +41,11 @@ FINAL_FILES    := $(BASE_FILE) $(QUERY_FILE) $(TRUTH_FILE)
 all: setup
 .PHONY: all
 
+query-gen ?= published
+ifneq ($(query-gen),published)
+include ../scripts/query-variant.mk
+else
+
 setup: $(FINAL_FILES)
 	@echo "-> $(DATASET_NAME) dataset setup complete!"
 	@echo "   base : $(BASE_FILE) (deduplicated from $(NUM_VECTORS) × 100d, int8 widened to float32)"
@@ -80,3 +85,5 @@ clean-all: clean
 	rm -f $(DOWNLOAD_FILES)
 
 .PHONY: all setup fetch clean clean-all
+
+endif

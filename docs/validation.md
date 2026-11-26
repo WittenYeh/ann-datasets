@@ -54,6 +54,6 @@ OMP_NUM_THREADS="$(nproc)" NUMBA_NUM_THREADS="$(nproc)" POLARS_MAX_THREADS="$(np
 - Ground-truth tests compare valid, distinct IDs and their rank distances against exhaustive float64 calculations.
   Cases include top-1000, tied boundary distances, and chunks smaller than k.
 - Make integration tests exercise the eight deduplicated recipes and GloVe-200d/300d on small local inputs.
-  They cover published and generated queries, text conversion, older splits, parameter changes, and reuse of prepared files.
+  They check drawout and Gaussian queries, switching methods on existing files, and opt-in variants of published datasets, including byte vectors and inner-product ground truth.
 - Generator tests check reproducibility, the noise mean and covariance, and preservation of the base.
   Simulated write and publication failures check that previous outputs survive and temporary files are removed.

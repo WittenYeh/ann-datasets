@@ -3,6 +3,7 @@
 Install ../requirements.txt first; FAISS is required, never silently skipped.
 Make integration tests also require Make >= 4.3, unzip and numactl.
 """
+import gzip
 import io
 import json
 import os
@@ -366,7 +367,7 @@ class GroundTruthTest(unittest.TestCase):
             source.write_bytes(writer(base.tolist()))
             queries.write_bytes(writer(query.tolist()))
             for k in (1, 7, len(base)):
-                # chunk=1 and short final chunks exercise FAISS -1/inf padding.
+                # Include chunks that have fewer than k candidates.
                 for chunk in (1, 5, 13, len(base), 100):
                     with self.subTest(fmt=fmt, k=k, chunk=chunk):
                         gt_module.compute_groundtruth(str(source), str(queries), str(self.output), k, chunk)
@@ -473,6 +474,11 @@ class MakePipelineTest(unittest.TestCase):
         noise = rng.standard_normal(sources.shape) * np.sqrt(variance)
         return fvecs(sources + noise)
 
+    def drawout(self, rows, count=3):
+        selected = set(np.random.default_rng(42).choice(len(rows), count, replace=False))
+        return ([row for i, row in enumerate(rows) if i not in selected],
+                [row for i, row in enumerate(rows) if i in selected])
+
     def archive(self, directory, archive_name, prefix, members):
         with tarfile.open(directory / archive_name, "w:gz") as tar:
             for name, data in members.items():
@@ -480,9 +486,12 @@ class MakePipelineTest(unittest.TestCase):
                 info.size = len(data)
                 tar.addfile(info, io.BytesIO(data))
 
-    def make(self, directory, *extra):
+    def make(self, directory, *extra, num_queries=3):
         command = ["make", "--no-print-directory", "-j4", "all", "GT_K=7", "GT_CHUNK_SIZE=13",
-                   "num_queries=3", "NUM_VECTORS=60", *extra]
+                   "NUM_VECTORS=60"]
+        if num_queries is not None:
+            command.append(f"num_queries={num_queries}")
+        command.extend(extra)
         result = subprocess.run(command, cwd=directory, text=True, stdout=subprocess.PIPE,
                                 stderr=subprocess.STDOUT)
         self.assertEqual(result.returncode, 0, result.stdout)
@@ -534,7 +543,6 @@ class MakePipelineTest(unittest.TestCase):
                     for suffix in ("_base.raw.fvecs", "_base.fvecs", "_query.fvecs"):
                         (directory / (prefix + suffix)).write_bytes(self.base_bytes[:-12])
                     (directory / (prefix + "_base.fvecs.dedup.json")).write_text("{}")
-                    expected_query = self.generated_query(list(dict.fromkeys(self.rows)))
                 elif name in ("crawl", "glove-100d"):
                     archive, member = (("crawl-300d-2M.vec.zip", "crawl-300d-2M.vec") if name == "crawl" else
                                        ("glove.2024.wikigiga.100d.zip", "glove_100_test_combined.txt"))
@@ -543,7 +551,6 @@ class MakePipelineTest(unittest.TestCase):
                         text = "60 2\n" + text
                     with zipfile.ZipFile(directory / archive, "w") as zipped:
                         zipped.writestr(member, text)
-                    expected_query = self.generated_query(list(dict.fromkeys(self.rows)))
                 elif name == "deep-10m":
                     parent = self.root / "deep-1b"
                     parent.mkdir()
@@ -558,6 +565,10 @@ class MakePipelineTest(unittest.TestCase):
                                                            b"".join(struct.pack("<bb", *r) for r in data))
                     expected_query = fvecs(queries)
                     expected_raw = fvecs(rows)
+                generated = name in ("crawl", "glove-100d", "yahoomusic")
+                if generated:
+                    held_in, held_out = self.drawout(self.rows)
+                    expected_raw, expected_query = fvecs(held_in), fvecs(held_out)
                 first = self.make(directory)
                 self.assertIn("../scripts/deduplicate.py", first)
                 self.assertIn("../scripts/compute_groundtruth.py", first)
@@ -578,23 +589,26 @@ class MakePipelineTest(unittest.TestCase):
                 self.assertIn("../scripts/compute_groundtruth.py", changed)
                 self.check(directory, prefix, expected_raw, expected_query, k=4)
                 changed = self.make(directory, "GT_K=4", "GT_CHUNK_SIZE=5", "variance=0.04")
-                if name in ("crawl", "glove-100d", "yahoomusic"):
-                    self.assertIn("../scripts/generate_queries.py", changed)
-                    self.assertIn("../scripts/compute_groundtruth.py", changed)
-                    self.assertEqual(files[0].stat().st_mtime_ns, mtimes[0])
-                    self.check(directory, prefix, expected_raw,
+                self.assertNotIn("../scripts/compute_groundtruth.py", changed)
+                self.assertEqual(files[1].stat().st_mtime_ns, mtimes[1])
+                if generated:
+                    self.make(directory, "query-gen=gaussian", "GT_K=4", "variance=0.04")
+                    self.check(directory, prefix, self.base_bytes,
                                self.generated_query(list(dict.fromkeys(self.rows)), variance=0.04), k=4)
-                else:
-                    self.assertNotIn("../scripts/generate_queries.py", changed)
-                    self.assertNotIn("../scripts/compute_groundtruth.py", changed)
-                    self.assertEqual(files[1].stat().st_mtime_ns, mtimes[1])
+                    base_mtime = files[0].stat().st_mtime_ns
+                    self.make(directory, "query-gen=gaussian", "GT_K=4", "variance=0")
+                    self.assertEqual(files[0].stat().st_mtime_ns, base_mtime)
+                    self.check(directory, prefix, self.base_bytes,
+                               self.generated_query(list(dict.fromkeys(self.rows)), variance=0), k=4)
+                    self.make(directory, "query-gen=drawout")
+                    self.check(directory, prefix, expected_raw, expected_query)
                 if name == "sift-1m":
                     for missing in files + [directory / (prefix + "_base.fvecs.dedup.json")]:
                         missing.unlink()
                         self.make(directory)
                         self.check(directory, prefix, expected_raw, expected_query)
 
-    def test_glove_200d_and_300d_keep_all_rows_and_rebuild_when_count_changes(self):
+    def test_glove_200d_and_300d_change_method_and_count(self):
         rows = self.rows * 2  # More than 100 rows, including duplicates.
         for dim in (200, 300):
             with self.subTest(dim=dim):
@@ -609,15 +623,81 @@ class MakePipelineTest(unittest.TestCase):
                 query = directory / (prefix + "_query.fvecs")
                 truth = directory / (prefix + "_groundtruth.ivecs")
                 self.make(directory)
+                held_in, held_out = self.drawout(rows)
+                self.assertEqual(base.read_bytes(), fvecs(held_in))
+                self.assertEqual(query.read_bytes(), fvecs(held_out))
+                check_groundtruth(self, truth, held_in, held_out, k=100)
+                self.make(directory, "query-gen=gaussian")
                 self.assertEqual(base.read_bytes(), fvecs(rows))
                 self.assertEqual(query.read_bytes(), self.generated_query(rows))
                 mtime = base.stat().st_mtime_ns
-                self.make(directory, "num_queries=5")
+                self.make(directory, "query-gen=gaussian", "num_queries=5")
                 self.assertEqual(base.stat().st_mtime_ns, mtime)
                 expected = self.generated_query(rows, count=5)
                 self.assertEqual(query.read_bytes(), expected)
                 queries = np.frombuffer(expected, dtype="<f4").reshape(5, 3)[:, 1:]
                 check_groundtruth(self, truth, rows, queries, k=100)
+                self.make(directory, "num_queries=5")
+                held_in, held_out = self.drawout(rows, 5)
+                self.assertEqual(base.read_bytes(), fvecs(held_in))
+                self.assertEqual(query.read_bytes(), fvecs(held_out))
+                check_groundtruth(self, truth, held_in, held_out, k=100)
+
+    def test_published_query_variants_preserve_originals(self):
+        # Include deduplicated inputs, mixed byte/float files, and inner-product GT.
+        rows = [(i, 22 - i) for i in range(20)] * 2
+        published = [(2, 3), (0, 4), (6, 1), (9, 2)]
+        for name in ("sift-1m", "bigann", "yandex-t2i-10m"):
+            with self.subTest(dataset=name):
+                directory = self.root / name
+                directory.mkdir()
+                shutil.copyfile(ROOT / name / "Makefile", directory / "Makefile")
+                if name == "bigann":
+                    for kind, values in (("base", rows), ("query", published)):
+                        (directory / f"bigann_{kind}.bvecs.gz").write_bytes(gzip.compress(bvecs(values)))
+                    publisher_base, publisher_query = "bigann_base.bvecs", "bigann_query.bvecs"
+                elif name == "sift-1m":
+                    self.archive(directory, "sift.tar.gz", "sift", {
+                        "sift_base.fvecs": fvecs(rows), "sift_query.fvecs": fvecs(published),
+                        "sift_learn.fvecs": fvecs(rows)})
+                    publisher_base, publisher_query = "sift_base.fvecs", "sift_query.fvecs"
+                else:
+                    for filename, values in (("base.10M.fbin", rows), ("query.public.100K.fbin", published)):
+                        (directory / filename).write_bytes(struct.pack("<II", len(values), 2)
+                                                           + np.asarray(values, dtype="<f4").tobytes())
+                    publisher_base, publisher_query = "t2i10m_base.fvecs", "t2i10m_query.fvecs"
+
+                base_ext = Path(publisher_base).suffix
+                encode = bvecs if base_ext == ".bvecs" else fvecs
+                for mode in ("drawout", "gaussian"):
+                    self.make(directory, f"query-gen={mode}", num_queries=None)
+                    variant = directory / "variants" / mode
+                    prepared = (variant / ("base" + base_ext)).read_bytes()
+                    if mode == "drawout":
+                        base, query = self.drawout(rows, len(published))
+                        self.assertEqual((variant / ("query" + base_ext)).read_bytes(), encode(query))
+                        if name == "sift-1m":
+                            base = list(dict.fromkeys(base))
+                    else:
+                        base = list(dict.fromkeys(rows)) if name == "sift-1m" else rows
+                        query_bytes = (variant / "query.fvecs").read_bytes()
+                        self.assertEqual(query_bytes, self.generated_query(base, len(published)))
+                        query = np.frombuffer(query_bytes, dtype="<f4").reshape(-1, 3)[:, 1:]
+                    self.assertEqual(prepared, encode(base))
+                    gt = variant / "groundtruth.ivecs"
+                    if name == "yandex-t2i-10m":
+                        ids = np.fromfile(gt, dtype="<i4").reshape(len(query), 8)[:, 1:]
+                        scores = np.asarray(query, dtype=np.float64) @ np.asarray(base).T
+                        np.testing.assert_array_equal(np.take_along_axis(scores, ids, axis=1),
+                                                      np.sort(scores, axis=1)[:, :-8:-1])
+                    else:
+                        check_groundtruth(self, gt, base, query, k=7)
+                    stamp = gt.stat().st_mtime_ns
+                    self.make(directory, f"query-gen={mode}", num_queries=None)
+                    self.assertEqual(gt.stat().st_mtime_ns, stamp)
+                expected_base = list(dict.fromkeys(rows)) if name == "sift-1m" else rows
+                self.assertEqual((directory / publisher_base).read_bytes(), encode(expected_base))
+                self.assertEqual((directory / publisher_query).read_bytes(), encode(published))
 
     def test_checker_rejects_incomplete_base_even_with_consistent_gt(self):
         prefix = "bad"
@@ -635,6 +715,26 @@ class MakePipelineTest(unittest.TestCase):
                                       str(self.root / (prefix + "_groundtruth.ivecs")), 7, 13)
         with self.assertRaisesRegex(AssertionError, "complete stable unique input"):
             self.check(self.root, prefix, self.base_bytes, self.query_bytes)
+
+    def test_invalid_drawout_leaves_files_usable_on_retry(self):
+        directory = self.root / "yahoomusic"
+        directory.mkdir()
+        shutil.copyfile(ROOT / "yahoomusic/Makefile", directory / "Makefile")
+        self.archive(directory, "yahoomusic.tar.gz", "yahoomusic",
+                     {"yahoomusic_query_all.fvecs": self.base_bytes})
+        self.make(directory)
+        files = [directory / ("yahoomusic_" + name) for name in
+                 ("base.raw.fvecs", "base.fvecs", "query.fvecs", "groundtruth.ivecs")]
+        saved = [f.read_bytes() for f in files]
+        for option in ("num_queries=0", f"num_queries={len(self.rows)}", "query-gen=other"):
+            with self.subTest(option=option):
+                failed = subprocess.run(["make", "-j4", "all", "GT_K=7", option], cwd=directory,
+                                        capture_output=True, text=True)
+                self.assertNotEqual(failed.returncode, 0)
+                self.assertIn("query-gen" if "query-gen" in option else "num_queries", failed.stderr)
+                self.assertEqual([f.read_bytes() for f in files], saved)
+        self.make(directory)
+        self.assertEqual([f.read_bytes() for f in files], saved)
 
     def test_gt_failure_preserves_output(self):
         from compute_groundtruth import compute_groundtruth

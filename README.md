@@ -39,13 +39,13 @@ Its zero-based row number in this file is the ID returned by the index. [Base da
 ## Query sets
 
 Search the index with the vectors in `sift_query.fvecs`, one query per row.
-SIFT-1M uses the publisher's queries.
-For a dataset such as Crawl, Make samples base rows and adds Gaussian noise.
-The sampled rows stay in the base.
+SIFT-1M uses the publisher's queries by default.
+Datasets such as Crawl default to `query-gen=drawout`, which holds sampled rows out of the base.
+Use `query-gen=gaussian` to retain the rows and add noise to their query copies.
 [Query sources and parameters](docs/query-sets.md)
 
 ```bash
-make -C crawl all num_queries=10000 variance=0.0001
+make -C crawl all query-gen=gaussian num_queries=10000 variance=0.0001
 ```
 
 ## Ground truth

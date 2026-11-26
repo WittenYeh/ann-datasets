@@ -14,8 +14,8 @@ Distinct base vectors can tie at the same distance.
 | Recipe | Ground truth |
 |--------|--------------|
 | Recipes that deduplicate the base, including SIFT-1M | Compute exact L2 neighbors against the final base row order, with 1,000 neighbors per query by default. [Datasets with deduplicated bases](base-dataset.md#datasets-with-deduplicated-bases) |
-| GloVe-200d and GloVe-300d | Compute exact L2 top-100 for the generated queries against the complete converted base. |
-| Deep1B and Yandex T2I-10M | Both recipes convert supplied neighbor IDs to `.ivecs`, with T2I using inner product for the first 10,000 published queries. |
+| GloVe-200d and GloVe-300d | Compute exact L2 top-100 against the base prepared by the selected query method. |
+| Deep1B and Yandex T2I-10M with `query-gen=published` | Both recipes convert supplied neighbor IDs to `.ivecs`, with T2I using inner product for the first 10,000 published queries. |
 
 A ground-truth file belongs to a specific base, query order, and metric.
 Changing the indexed rows or the queries requires matching neighbor IDs.
@@ -43,7 +43,7 @@ The shared recipe takes the thread count from `nproc` and launches the computati
 
 ## Computing neighbors directly
 
-The standalone utility reads `.fvecs` or `.bvecs` base and query files of the same dimension and searches with FAISS `IndexFlatL2`.
+The standalone utility reads `.fvecs` or `.bvecs` base and query files of the same dimension and searches with FAISS `IndexFlatL2` by default. Use `--metric ip` to rank by decreasing inner product.
 For a base larger than `--chunk-size`, it searches one chunk at a time, converts each chunk's IDs to base row numbers, and merges the closest neighbors per query.
 Its defaults are `--k 100` and `--chunk-size 2000000`. [Ground-truth utility](../scripts/compute_groundtruth.py)
 

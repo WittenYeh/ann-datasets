@@ -26,6 +26,9 @@ DEFAULT_CHUNK = 2_000_000
 def _write_base_chunked(data, mask, output_path, ext, chunk_size):
     """Write base vectors in chunks to avoid loading all into memory at once."""
     n, d = data.shape
+    # Cap the coordinate and record buffers for high-dimensional inputs.
+    chunk_size = min(chunk_size, max(1, (64 * 1024**2) // (4 + d * data.itemsize)))
+    write = fvecs_write if ext == ".fvecs" else bvecs_write
     written = 0
     with open(output_path, "wb") as f:
         for start in range(0, n, chunk_size):
@@ -33,18 +36,9 @@ def _write_base_chunked(data, mask, output_path, ext, chunk_size):
             chunk_mask = mask[start:end]
             if not chunk_mask.any():
                 continue
-            chunk = np.ascontiguousarray(data[start:end][chunk_mask])
-            nc = chunk.shape[0]
-            if ext == ".fvecs":
-                buf = np.empty((nc, d + 1), dtype="int32")
-                buf[:, 0] = d
-                buf[:, 1:] = chunk.astype("float32").view("int32")
-            else:  # .bvecs
-                buf = np.empty((nc, d + 4), dtype="uint8")
-                buf[:, :4] = np.array([d], dtype="int32").view("uint8")
-                buf[:, 4:] = chunk.astype("uint8")
-            f.write(buf.tobytes())
-            written += nc
+            chunk = data[start:end][chunk_mask]
+            write(f, chunk)
+            written += len(chunk)
             print(f"  Written {written:,} base vectors...")
     return written
 
@@ -79,9 +73,8 @@ def main():
     n, d = data.shape
     nq = args.num_queries
 
-    if nq >= n:
-        print(f"Error: num_queries ({nq}) >= total vectors ({n})")
-        sys.exit(1)
+    if not 1 <= nq < n:
+        parser.error(f"num_queries must be between 1 and {n - 1} for a drawout from {n} rows")
 
     print(f"Input: {n} vectors, {d} dimensions")
     print(f"Extracting {nq} random query vectors (seed={args.seed})...")

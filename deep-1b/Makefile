@@ -24,6 +24,11 @@ FINAL_FILES    := $(BASE_FILE) $(QUERY_FILE) $(LEARN_FILE) $(TRUTH_FILE)
 all: setup
 .PHONY: all
 
+query-gen ?= published
+ifneq ($(query-gen),published)
+include ../scripts/query-variant.mk
+else
+
 setup: $(FINAL_FILES)
 	@echo "-> Deep1B dataset setup complete!"
 
@@ -71,3 +76,5 @@ clean-all: clean
 	rm -f $(DOWNLOAD_FILES)
 
 .PHONY: all setup fetch clean clean-all
+
+endif

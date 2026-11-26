@@ -23,10 +23,17 @@ from vecs_io import fvecs_mmap, fvecs_read, bvecs_mmap, bvecs_read, ivecs_write
 DEFAULT_CHUNK = 2_000_000
 
 
-def _search_chunked(xb_mmap, xq, k, chunk_size, is_bvecs=False):
-    """Brute-force k-NN in chunks to avoid loading the entire base into RAM."""
+def _flat_index(d, metric):
     import faiss
+    if metric == "l2":
+        return faiss.IndexFlatL2(d)
+    if metric == "ip":
+        return faiss.IndexFlatIP(d)
+    raise ValueError(f"Unknown metric: {metric}")
 
+
+def _search_chunked(xb_mmap, xq, k, chunk_size, is_bvecs=False, *, metric="l2"):
+    """Brute-force k-NN in chunks to avoid loading the entire base into RAM."""
     nq = xq.shape[0]
     nb = xb_mmap.shape[0]
     d = xq.shape[1]
@@ -43,9 +50,11 @@ def _search_chunked(xb_mmap, xq, k, chunk_size, is_bvecs=False):
         # Materialise *only this chunk* into contiguous float32 RAM
         chunk = np.ascontiguousarray(xb_mmap[start:end], dtype="float32")
 
-        index = faiss.IndexFlatL2(d)
+        index = _flat_index(d, metric)
         index.add(chunk)
-        D_chunk, I_chunk = index.search(xq, k)
+        D_chunk, I_chunk = index.search(xq, min(k, len(chunk)))
+        if metric == "ip":
+            D_chunk *= -1  # Merge the largest inner products as the smallest costs.
 
         # Shift local IDs to global IDs
         I_chunk += start
@@ -64,7 +73,7 @@ def _search_chunked(xb_mmap, xq, k, chunk_size, is_bvecs=False):
     return all_I[rows, order]
 
 
-def compute_groundtruth(base_file, query_file, output_file, k, chunk_size):
+def compute_groundtruth(base_file, query_file, output_file, k, chunk_size, metric="l2"):
     if k <= 0 or chunk_size <= 0:
         raise ValueError("k and chunk_size must be positive")
     try:
@@ -100,15 +109,15 @@ def compute_groundtruth(base_file, query_file, output_file, k, chunk_size):
 
     # Decide whether to use chunked search
     if nb <= chunk_size:
-        print(f"Building FAISS IndexFlatL2 and searching (k={k})...")
+        print(f"Building a flat FAISS index and searching (metric={metric}, k={k})...")
         xb = np.ascontiguousarray(xb_mmap, dtype="float32")
-        index = faiss.IndexFlatL2(d)
+        index = _flat_index(d, metric)
         index.add(xb)
         del xb  # free after add copies internally
         _, I = index.search(xq, k)
     else:
         print(f"Chunked search (k={k}, chunk_size={chunk_size:,})...")
-        I = _search_chunked(xb_mmap, xq, k, chunk_size, is_bvecs)
+        I = _search_chunked(xb_mmap, xq, k, chunk_size, metric=metric)
 
     print(f"Writing ground truth to {output_file}...")
     # Publish only complete files; interrupted recomputations preserve old GT.
@@ -137,10 +146,12 @@ def main():
                         help="Number of nearest neighbors (default: 100)")
     parser.add_argument("--chunk-size", type=int, default=DEFAULT_CHUNK,
                         help=f"Max base vectors per chunk (default: {DEFAULT_CHUNK:,})")
+    parser.add_argument("--metric", choices=("l2", "ip"), default="l2",
+                        help="Rank by Euclidean distance or inner product (default: l2)")
 
     args = parser.parse_args()
     compute_groundtruth(args.base_file, args.query_file, args.output_file,
-                        args.k, args.chunk_size)
+                        args.k, args.chunk_size, args.metric)
 
 
 if __name__ == "__main__":
